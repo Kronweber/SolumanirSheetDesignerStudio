@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3E99CE14-B889-426C-9D66-B21831DE9676}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolumanirSheetDesignerStudio.Core", "src\SolumanirSheetDesignerStudio.Core\SolumanirSheetDesignerStudio.Core.csproj", "{E2D8AD21-9076-4764-897E-94E49554889A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolumanirSheetDesignerStudio.Rendering", "src\SolumanirSheetDesignerStudio.Rendering\SolumanirSheetDesignerStudio.Rendering.csproj", "{7F790303-CDFC-4B66-8C27-65B7C01B033F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolumanirSheetDesignerStudio.App", "src\SolumanirSheetDesignerStudio.App\SolumanirSheetDesignerStudio.App.csproj", "{50201520-AB05-4B7D-9D3E-C2F5AE34E5B8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{86D159FF-6A94-4939-AD0F-E3AED200AF3A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolumanirSheetDesignerStudio.SelfTest", "tests\SolumanirSheetDesignerStudio.SelfTest\SolumanirSheetDesignerStudio.SelfTest.csproj", "{A3B17E81-FF21-4622-96C8-415CAADBB80A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E2D8AD21-9076-4764-897E-94E49554889A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2D8AD21-9076-4764-897E-94E49554889A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2D8AD21-9076-4764-897E-94E49554889A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2D8AD21-9076-4764-897E-94E49554889A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F790303-CDFC-4B66-8C27-65B7C01B033F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F790303-CDFC-4B66-8C27-65B7C01B033F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F790303-CDFC-4B66-8C27-65B7C01B033F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F790303-CDFC-4B66-8C27-65B7C01B033F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50201520-AB05-4B7D-9D3E-C2F5AE34E5B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50201520-AB05-4B7D-9D3E-C2F5AE34E5B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50201520-AB05-4B7D-9D3E-C2F5AE34E5B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50201520-AB05-4B7D-9D3E-C2F5AE34E5B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3B17E81-FF21-4622-96C8-415CAADBB80A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3B17E81-FF21-4622-96C8-415CAADBB80A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3B17E81-FF21-4622-96C8-415CAADBB80A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3B17E81-FF21-4622-96C8-415CAADBB80A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E2D8AD21-9076-4764-897E-94E49554889A} = {3E99CE14-B889-426C-9D66-B21831DE9676}
+		{7F790303-CDFC-4B66-8C27-65B7C01B033F} = {3E99CE14-B889-426C-9D66-B21831DE9676}
+		{50201520-AB05-4B7D-9D3E-C2F5AE34E5B8} = {3E99CE14-B889-426C-9D66-B21831DE9676}
+		{A3B17E81-FF21-4622-96C8-415CAADBB80A} = {86D159FF-6A94-4939-AD0F-E3AED200AF3A}
+	EndGlobalSection
+EndGlobal

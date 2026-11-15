@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SolumanirSheetDesignerStudio.App.ViewModels"
+             xmlns:l="using:SolumanirSheetDesignerStudio.App.Services"
+             x:Class="SolumanirSheetDesignerStudio.App.Views.PagesPanel"
+             x:DataType="vm:EditorViewModel">
+  <!-- Page list with thumbnails: click to open, Ctrl/Shift for multi-select, drag to reorder, right-click for more. -->
+  <DockPanel Margin="10,10,6,10">
+    <Button DockPanel.Dock="Bottom" Classes="dashed" Margin="0,6,4,0"
+            Content="{l:T '+ New page'}" Command="{Binding AddPageCommand}" />
+    <Panel>
+      <ListBox x:Name="List" ItemsSource="{Binding Pages}" SelectionMode="Multiple"
+               ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:PageItemViewModel">
+            <StackPanel Margin="7" Spacing="5" Background="Transparent">
+              <Border Background="#1A1715" CornerRadius="2" ClipToBounds="True" MinHeight="40">
+                <Image Source="{Binding Thumbnail}" Stretch="Uniform" MaxHeight="240" />
+              </Border>
+              <DockPanel>
+                <!-- marks the page shown on the canvas when several pages are selected -->
+                <Border DockPanel.Dock="Left" Width="3" CornerRadius="1.5" Margin="0,2,6,2" Background="{StaticResource AccentBrush}"
+                        IsVisible="{Binding IsCurrent}" />
+                <TextBlock DockPanel.Dock="Left" Classes="hint" Text="{Binding Number}" Margin="0,0,7,0" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding DisplayName}" FontFamily="{StaticResource BodyFont}" FontSize="16"
+                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+              </DockPanel>
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+      <Border x:Name="DropLine" Height="3" Background="{StaticResource AccentBrush}"
+              VerticalAlignment="Top" IsVisible="False" IsHitTestVisible="False" />
+    </Panel>
+  </DockPanel>
+</UserControl>

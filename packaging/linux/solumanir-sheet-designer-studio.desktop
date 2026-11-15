@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Solumanir Sheet Designer Studio
+Comment=Compose species reference sheets and export them as high-resolution PNGs
+Exec=SolumanirSheetDesignerStudio %f
+Icon=solumanir-sheet-designer-studio
+Terminal=false
+Categories=Graphics;Publishing;
+MimeType=application/x-speciesproj;
+StartupWMClass=SolumanirSheetDesignerStudio

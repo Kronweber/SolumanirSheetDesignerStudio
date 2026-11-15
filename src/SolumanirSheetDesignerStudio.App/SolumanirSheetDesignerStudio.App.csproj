@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>SolumanirSheetDesignerStudio</AssemblyName>
+    <RootNamespace>SolumanirSheetDesignerStudio.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app-icon.ico</ApplicationIcon>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="$(MvvmToolkitVersion)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SolumanirSheetDesignerStudio.Core\SolumanirSheetDesignerStudio.Core.csproj" />
+    <ProjectReference Include="..\SolumanirSheetDesignerStudio.Rendering\SolumanirSheetDesignerStudio.Rendering.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+    <!-- The same font files the renderer embeds, exposed to XAML as avares://SolumanirSheetDesignerStudio/Assets/Fonts#Family -->
+    <AvaloniaResource Include="..\..\assets\fonts\*.ttf;..\..\assets\fonts\*.otf" Link="Assets\Fonts\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Final output. Every project builds into its own bin/ and obj/ folders; after the app is built (or published)
+       the complete application is copied to <repo>/bin/build/<flavour>/ and packed as
+       <repo>/bin/package/SolumanirSheetDesignerStudio-<version>-<flavour>.zip, where <flavour> is the configuration
+       plus the runtime identifier when one is given (Debug, Release, Release-linux-x64).
+       Skipped when nothing changed; -p:Distribute=false turns it off. -->
+  <PropertyGroup>
+    <Distribute Condition="'$(Distribute)' == ''">true</Distribute>
+    <DistFlavour>$(Configuration)</DistFlavour>
+    <DistFlavour Condition="'$(RuntimeIdentifier)' != ''">$(Configuration)-$(RuntimeIdentifier)</DistFlavour>
+    <DistRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'bin'))</DistRoot>
+    <DistAppDir>$(DistRoot)build/$(DistFlavour)/</DistAppDir>
+    <DistZip>$(DistRoot)package/$(AssemblyName)-$(Version)-$(DistFlavour).zip</DistZip>
+  </PropertyGroup>
+  <Target Name="CollectBuiltApp" AfterTargets="Build" Condition="'$(Distribute)' == 'true' and '$(_IsPublishing)' != 'true'">
+    <ItemGroup>
+      <DistFile Include="$(OutDir)**/*" Exclude="$(PublishDir)**/*" />
+    </ItemGroup>
+  </Target>
+  <Target Name="DistributeBuiltApp" AfterTargets="CollectBuiltApp" Condition="'$(Distribute)' == 'true' and '$(_IsPublishing)' != 'true'"
+          Inputs="@(DistFile)" Outputs="$(DistZip)">
+    <CallTarget Targets="WriteDistribution" />
+  </Target>
+  <Target Name="DistributePublishedApp" AfterTargets="Publish" Condition="'$(Distribute)' == 'true'">
+    <ItemGroup>
+      <DistFile Remove="@(DistFile)" />
+      <DistFile Include="$(PublishDir)**/*" />
+    </ItemGroup>
+    <CallTarget Targets="WriteDistribution" />
+  </Target>
+  <Target Name="WriteDistribution">
+    <RemoveDir Directories="$(DistAppDir)" />
+    <Copy SourceFiles="@(DistFile)" DestinationFiles="@(DistFile->'$(DistAppDir)%(RecursiveDir)%(Filename)%(Extension)')" />
+    <MakeDir Directories="$(DistRoot)package" />
+    <ZipDirectory SourceDirectory="$(DistAppDir)" DestinationFile="$(DistZip)" Overwrite="true" />
+    <Message Importance="high" Text="$(AssemblyName) -> $(DistAppDir)" />
+    <Message Importance="high" Text="$(AssemblyName) -> $(DistZip)" />
+  </Target>
+</Project>

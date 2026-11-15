@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Dependency-free console test runner for the core library (no NuGet packages needed). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>SolumanirSheetDesignerStudio.SelfTest</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SolumanirSheetDesignerStudio.Core\SolumanirSheetDesignerStudio.Core.csproj" />
+  </ItemGroup>
+</Project>

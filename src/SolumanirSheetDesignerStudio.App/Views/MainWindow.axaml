@@ -1,0 +1,194 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SolumanirSheetDesignerStudio.App.ViewModels"
+        xmlns:v="using:SolumanirSheetDesignerStudio.App.Views"
+        xmlns:l="using:SolumanirSheetDesignerStudio.App.Services"
+        x:Class="SolumanirSheetDesignerStudio.App.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="{Binding Title}"
+        Icon="/Assets/app-icon.png"
+        Width="1500" Height="950" MinWidth="1100" MinHeight="700"
+        DragDrop.AllowDrop="True">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+N" Command="{Binding NewProjectCommand}" />
+    <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenProjectCommand}" />
+    <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsCommand}" />
+    <!-- Only shortcuts that mean the same wherever the focus is. Key bindings run before the focused control sees
+         the key, so anything a text box needs (Delete, Ctrl+V, Ctrl+Z, arrows…) is handled in code-behind instead,
+         after the focused control has had its turn (see OnKeyDownBubbled). -->
+    <KeyBinding Gesture="Ctrl+E" Command="{Binding Editor.ExportCommand}" />
+    <KeyBinding Gesture="Ctrl+D0" Command="{Binding Editor.ZoomFitCommand}" />
+    <KeyBinding Gesture="Ctrl+NumPad0" Command="{Binding Editor.ZoomFitCommand}" />
+    <KeyBinding Gesture="Ctrl+OemPlus" Command="{Binding Editor.ZoomInCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+OemPlus" Command="{Binding Editor.ZoomInCommand}" />
+    <KeyBinding Gesture="Ctrl+Add" Command="{Binding Editor.ZoomInCommand}" />
+    <KeyBinding Gesture="Ctrl+OemMinus" Command="{Binding Editor.ZoomOutCommand}" />
+    <KeyBinding Gesture="Ctrl+Subtract" Command="{Binding Editor.ZoomOutCommand}" />
+    <KeyBinding Gesture="F5" Command="{Binding Editor.TogglePreviewCommand}" />
+    <KeyBinding Gesture="Ctrl+P" Command="{Binding Editor.TogglePreviewCommand}" />
+  </Window.KeyBindings>
+
+  <LayoutTransformControl x:Name="UiScale">
+    <DockPanel>
+      <!-- ===== menu bar ===== -->
+      <Menu x:Name="MainMenu" DockPanel.Dock="Top">
+        <MenuItem x:Name="FileMenu" Header="{l:T _File}">
+          <MenuItem Header="{l:T _New}" Command="{Binding NewProjectCommand}" InputGesture="Ctrl+N" />
+          <MenuItem Header="{l:T '_Open…'}" Command="{Binding OpenProjectCommand}" InputGesture="Ctrl+O" />
+          <MenuItem x:Name="RecentMenu" Header="{l:T 'Open _Recent'}" />
+          <Separator />
+          <MenuItem Header="{l:T _Save}" Command="{Binding SaveCommand}" InputGesture="Ctrl+S" />
+          <MenuItem Header="{l:T 'Save _As…'}" Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S" />
+          <MenuItem Header="{l:T 'Save a _Copy…'}" Command="{Binding SaveCopyCommand}" />
+          <MenuItem Header="{l:T 'Re_vert to Saved'}" Command="{Binding RevertCommand}" />
+          <MenuItem Header="{l:T '_Close Project'}" Command="{Binding CloseProjectCommand}" />
+          <Separator />
+          <MenuItem Header="{l:T '_Export…'}" Command="{Binding Editor.ExportCommand}" IsEnabled="{Binding HasProject}" InputGesture="Ctrl+E" />
+          <MenuItem Header="{l:T '_Import Pages from Another Project…'}" Command="{Binding Editor.ImportPagesCommand}" IsEnabled="{Binding HasProject}" />
+          <Separator />
+          <MenuItem Header="{l:T 'Se_ttings…'}" Command="{Binding ShowSettingsCommand}" />
+          <Separator />
+          <MenuItem Header="{l:T E_xit}" Command="{Binding ExitCommand}" />
+        </MenuItem>
+
+        <MenuItem Header="{l:T _Edit}" IsEnabled="{Binding HasProject}">
+          <MenuItem Header="{l:T _Undo}" Command="{Binding Editor.UndoCommand}" InputGesture="Ctrl+Z" />
+          <MenuItem Header="{l:T _Redo}" Command="{Binding Editor.RedoCommand}" InputGesture="Ctrl+Y" />
+          <Separator />
+          <MenuItem Header="{l:T 'Add _Row'}" Command="{Binding Editor.AddRowCommand}" />
+          <MenuItem Header="{l:T 'Add _Slot'}" Command="{Binding Editor.AddSlotCommand}" />
+          <MenuItem Header="{l:T 'Add _Lore Section'}" Command="{Binding Editor.AddLoreCommand}" />
+          <Separator />
+          <MenuItem Header="{l:T '_Paste Image'}" Command="{Binding Editor.PasteImageCommand}" InputGesture="Ctrl+V" />
+          <MenuItem Header="{l:T _Duplicate}" Command="{Binding Editor.DuplicateSelectionCommand}" InputGesture="Ctrl+D" />
+          <MenuItem Header="{l:T Re_name}" Command="{Binding Editor.RenameSelectionCommand}" InputGesture="F2" />
+          <MenuItem Header="{l:T 'Move _Back / Up'}" Command="{Binding Editor.MoveSelectionBackCommand}" InputGesture="Alt+Up" />
+          <MenuItem Header="{l:T 'Move _Forward / Down'}" Command="{Binding Editor.MoveSelectionForwardCommand}" InputGesture="Alt+Down" />
+          <MenuItem Header="{l:T De_lete}" Command="{Binding Editor.DeleteSelectionCommand}" InputGesture="Delete" />
+        </MenuItem>
+
+        <MenuItem x:Name="PageMenu" Header="{l:T _Page}" IsEnabled="{Binding HasProject}">
+          <MenuItem Header="{l:T '_New Page'}" Command="{Binding Editor.AddPageCommand}" />
+          <MenuItem x:Name="TemplateMenu" Header="{l:T 'New Page from _Template'}" />
+          <MenuItem Header="{l:T '_Duplicate Page'}" Click="OnDuplicatePage" />
+          <MenuItem Header="{l:T '_Rename Page…'}" Click="OnRenamePage" />
+          <MenuItem Header="{l:T 'Move Page _Up'}" Click="OnMovePageUp" />
+          <MenuItem Header="{l:T 'Move Page Do_wn'}" Click="OnMovePageDown" />
+          <Separator />
+          <MenuItem Header="{l:T '_Save Page as Template…'}" Click="OnSavePageTemplate" />
+          <Separator />
+          <MenuItem Header="{l:T 'De_lete Page…'}" Click="OnDeletePage" />
+        </MenuItem>
+
+        <MenuItem Header="{l:T _View}" IsEnabled="{Binding HasProject}">
+          <MenuItem Header="{l:T '_Preview'}" Command="{Binding Editor.TogglePreviewCommand}" InputGesture="F5" />
+          <Separator />
+          <MenuItem Header="{l:T 'Zoom _In'}" Command="{Binding Editor.ZoomInCommand}" InputGesture="Ctrl+OemPlus" />
+          <MenuItem Header="{l:T 'Zoom _Out'}" Command="{Binding Editor.ZoomOutCommand}" InputGesture="Ctrl+OemMinus" />
+          <MenuItem Header="{l:T '_Fit to Width'}" Command="{Binding Editor.ZoomFitCommand}" InputGesture="Ctrl+D0" />
+          <MenuItem Header="{l:T '_Actual Size (100 %)'}" Command="{Binding Editor.ZoomActualCommand}" />
+          <Separator />
+          <MenuItem Header="{l:T 'Pages and Images _Panel'}" Command="{Binding ToggleLeftPanelCommand}" />
+          <MenuItem Header="{l:T 'I_nspector'}" Command="{Binding ToggleRightPanelCommand}" />
+        </MenuItem>
+
+        <MenuItem Header="{l:T _Help}">
+          <MenuItem Header="{l:T _About}" Command="{Binding AboutCommand}" />
+        </MenuItem>
+      </Menu>
+
+      <!-- ===== toolbar ===== -->
+      <Border DockPanel.Dock="Top" Classes="toolbar" IsVisible="{Binding HasProject}">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <ToggleButton IsChecked="{Binding Editor.IsPreview}" Content="{Binding Editor.PreviewLabel}" ToolTip.Tip="{l:T 'Show exactly what will be exported (F5)'}" />
+            <Border Classes="vsep" />
+            <Button Classes="tool" Content="−" Command="{Binding Editor.ZoomOutCommand}" ToolTip.Tip="{l:T 'Zoom out'}" />
+            <Button Classes="tool" MinWidth="60" Content="{Binding Editor.ZoomText}" Command="{Binding Editor.ZoomFitCommand}" ToolTip.Tip="{l:T 'Fit to width'}" />
+            <Button Classes="tool" Content="+" Command="{Binding Editor.ZoomInCommand}" ToolTip.Tip="{l:T 'Zoom in'}" />
+            <Border Classes="vsep" />
+            <Button Classes="primary" Content="{l:T 'Export…'}" Command="{Binding Editor.ExportCommand}" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Button Classes="tool" Content="{l:T Save}" Command="{Binding SaveCommand}" />
+            <TextBlock Classes="info" Text="{Binding Editor.SaveState}" VerticalAlignment="Center" Margin="4,0,6,0" />
+            <Border Classes="vsep" />
+            <Button Classes="tool" Content="↶" Command="{Binding Editor.UndoCommand}" ToolTip.Tip="{Binding Editor.UndoTip}" />
+            <Button Classes="tool" Content="↷" Command="{Binding Editor.RedoCommand}" ToolTip.Tip="{Binding Editor.RedoTip}" />
+            <Border Classes="vsep" />
+            <Button Classes="tool" Content="{l:T '+ Row'}" Command="{Binding Editor.AddRowCommand}" IsEnabled="{Binding Editor.IsEditing}" />
+            <Button Classes="tool" Content="{l:T '+ Slot'}" Command="{Binding Editor.AddSlotCommand}" IsEnabled="{Binding Editor.IsEditing}" />
+            <Button Classes="tool" Content="{l:T '+ Section'}" Command="{Binding Editor.AddLoreCommand}" IsEnabled="{Binding Editor.IsEditing}" />
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- ===== status bar ===== -->
+      <Border DockPanel.Dock="Bottom" Classes="statusbar">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Editor.IsExporting, FallbackValue=False}">
+              <TextBlock Classes="info" Text="{Binding Editor.ExportStatus}" VerticalAlignment="Center" />
+              <ProgressBar Width="170" Minimum="0" Maximum="1" Value="{Binding Editor.ExportProgress}" VerticalAlignment="Center" />
+              <Button Classes="flat" Content="{l:T Cancel}" Command="{Binding Editor.CancelExportCommand}" />
+            </StackPanel>
+            <TextBlock Classes="label" Text="{Binding Editor.ZoomText}" IsVisible="{Binding HasProject}" />
+            <l:GpuStripHost x:Name="GpuHost" VerticalAlignment="Center" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center" MinHeight="22">
+            <TextBlock Classes="info" Text="{Binding Editor.SaveState}" VerticalAlignment="Center" />
+            <TextBlock Classes="label" Text="{Binding Editor.SelectionInfo}" />
+            <!-- what the element under the pointer can do (drag, wheel, keys) -->
+            <TextBlock Classes="hint" Text="{Binding Editor.Hint}" VerticalAlignment="Center" />
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- ===== content ===== -->
+      <Panel>
+        <Panel IsVisible="{Binding ShowStart}">
+          <v:StartView DataContext="{Binding Start}" />
+        </Panel>
+
+        <Grid x:Name="EditorGrid" IsVisible="{Binding HasProject}" ColumnDefinitions="230,4,*,4,320">
+          <Border x:Name="LeftPanel" Grid.Column="0" Classes="panel">
+            <TabControl SelectedIndex="{Binding LeftTab}" Padding="0">
+              <TabItem Header="{l:T PAGES}" FontSize="13">
+                <v:PagesPanel DataContext="{Binding Editor}" />
+              </TabItem>
+              <TabItem Header="{l:T IMAGES}" FontSize="13">
+                <v:LibraryPanel DataContext="{Binding Editor.Library}" />
+              </TabItem>
+            </TabControl>
+          </Border>
+          <GridSplitter x:Name="LeftSplitter" Grid.Column="1" ResizeDirection="Columns" />
+          <v:SheetView x:Name="SheetArea" Grid.Column="2" DataContext="{Binding Editor}" />
+          <GridSplitter x:Name="RightSplitter" Grid.Column="3" ResizeDirection="Columns" />
+          <Border x:Name="RightPanel" Grid.Column="4" Classes="panel">
+            <v:InspectorPanel DataContext="{Binding Editor.Inspector}" />
+          </Border>
+        </Grid>
+
+        <!-- busy veil while images are imported: it takes the pointer, so nothing underneath can be clicked meanwhile -->
+        <Border IsVisible="{Binding Editor.IsBusy, FallbackValue=False}" Background="#55000000">
+          <Border Classes="toast" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Text="{l:T 'Working…'}" />
+          </Border>
+        </Border>
+
+        <!-- toasts -->
+        <ItemsControl ItemsSource="{Binding Toasts.Items}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="18">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:ToastViewModel">
+              <Border Classes="toast" Classes.error="{Binding IsError}">
+                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Panel>
+    </DockPanel>
+  </LayoutTransformControl>
+</Window>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-speciesproj">
+    <comment>Solumanir Sheet Designer Studio project</comment>
+    <glob pattern="*.speciesproj"/>
+    <!-- v2 projects are ZIP archives, v1 (prototype) files start with SPSHEET1 -->
+    <magic priority="60">
+      <match type="string" offset="0" value="SPSHEET1"/>
+    </magic>
+    <sub-class-of type="application/zip"/>
+  </mime-type>
+</mime-info>

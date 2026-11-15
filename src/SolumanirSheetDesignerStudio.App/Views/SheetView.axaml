@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:SolumanirSheetDesignerStudio.App.Controls"
+             xmlns:vm="using:SolumanirSheetDesignerStudio.App.ViewModels"
+             x:Class="SolumanirSheetDesignerStudio.App.Views.SheetView"
+             x:DataType="vm:EditorViewModel">
+  <!-- The sheet on its desk. The overlay hosts the in-place text editors; it is scaled with the zoom so an editor
+       sits exactly on the text it replaces, in the same font and size. -->
+  <ScrollViewer x:Name="Scroller"
+                Background="{StaticResource DeskBrush}"
+                HorizontalScrollBarVisibility="Auto"
+                VerticalScrollBarVisibility="Auto">
+    <Panel HorizontalAlignment="Center" VerticalAlignment="Top">
+      <c:SheetCanvas x:Name="Sheet" Editor="{Binding}" HorizontalAlignment="Left" VerticalAlignment="Top" />
+      <LayoutTransformControl x:Name="OverlayScale" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="28">
+        <Canvas x:Name="Overlay" Width="1600" Height="100">
+          <TextBox x:Name="LineEditor" Classes="inplace" IsVisible="False" />
+          <TextBox x:Name="BodyEditor" Classes="inplace body" IsVisible="False"
+                   AcceptsReturn="True" AcceptsTab="False" TextWrapping="Wrap" />
+        </Canvas>
+      </LayoutTransformControl>
+    </Panel>
+  </ScrollViewer>
+</UserControl>

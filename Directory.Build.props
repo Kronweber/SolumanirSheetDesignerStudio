@@ -1,0 +1,19 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Version>0.1.0</Version>
+    <Product>Solumanir Sheet Designer Studio</Product>
+    <Authors>Solumanir Sheet Designer Studio</Authors>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+    <!-- Third-party package versions (one place to bump). SkiaSharp/HarfBuzzSharp must match what Avalonia.Skia uses. -->
+    <AvaloniaVersion>11.3.23</AvaloniaVersion>
+    <SkiaSharpVersion>2.88.9</SkiaSharpVersion>
+    <HarfBuzzSharpVersion>8.3.1.1</HarfBuzzSharpVersion>
+    <MarkdigVersion>1.6.0</MarkdigVersion>
+    <MvvmToolkitVersion>8.4.2</MvvmToolkitVersion>
+  </PropertyGroup>
+</Project>

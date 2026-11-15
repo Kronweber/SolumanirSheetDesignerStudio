@@ -1,0 +1,21 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="SolumanirSheetDesignerStudio.App.App"
+             RequestedThemeVariant="Dark">
+  <Application.Styles>
+    <!-- Fluent (dark) recoloured with the warm palette of handoff section 9. -->
+    <FluentTheme>
+      <FluentTheme.Palettes>
+        <ColorPaletteResources x:Key="Dark"
+                               Accent="#C9A154"
+                               AltHigh="#221F1C" AltLow="#221F1C" AltMedium="#221F1C" AltMediumHigh="#221F1C" AltMediumLow="#2B2724"
+                               BaseHigh="#ECE5D8" BaseLow="#4A433C" BaseMedium="#A99F90" BaseMediumHigh="#CFC6B6" BaseMediumLow="#5A524A"
+                               ChromeAltLow="#CFC6B6" ChromeBlackHigh="#000000" ChromeBlackLow="#CFC6B6" ChromeBlackMedium="#000000" ChromeBlackMediumLow="#000000"
+                               ChromeDisabledHigh="#4A433C" ChromeDisabledLow="#A99F90" ChromeGray="#A99F90" ChromeHigh="#A99F90"
+                               ChromeLow="#221F1C" ChromeMedium="#2B2724" ChromeMediumLow="#3A3531" ChromeWhite="#ECE5D8"
+                               ListLow="#3A3531" ListMedium="#4A423A" RegionColor="#2B2724" />
+      </FluentTheme.Palettes>
+    </FluentTheme>
+    <StyleInclude Source="avares://SolumanirSheetDesignerStudio/Styles/Theme.axaml" />
+  </Application.Styles>
+</Application>

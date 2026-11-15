@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>SolumanirSheetDesignerStudio.Rendering</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="$(SkiaSharpVersion)" />
+    <PackageReference Include="HarfBuzzSharp" Version="$(HarfBuzzSharpVersion)" />
+    <PackageReference Include="Markdig" Version="$(MarkdigVersion)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SolumanirSheetDesignerStudio.Core\SolumanirSheetDesignerStudio.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Sheet fonts (Cinzel, Alegreya, Alegreya Sans — SIL OFL). See assets/fonts/README.md for the expected files. -->
+    <EmbeddedResource Include="..\..\assets\fonts\*.ttf;..\..\assets\fonts\*.otf" LogicalName="Fonts/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

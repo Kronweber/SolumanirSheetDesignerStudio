@@ -1,0 +1,217 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SolumanirSheetDesignerStudio.App.ViewModels"
+        xmlns:m="using:SolumanirSheetDesignerStudio.Core.Model"
+        xmlns:l="using:SolumanirSheetDesignerStudio.App.Services"
+        x:Class="SolumanirSheetDesignerStudio.App.Dialogs.SettingsDialog"
+        x:DataType="vm:SettingsDialogViewModel"
+        Title="{l:T Settings}"
+        Width="680" Height="600" MinWidth="600" MinHeight="480"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+  <!-- App-wide settings (handoff 8.2), stored as JSON in the per-user data folder. -->
+  <Window.Styles>
+    <Style Selector="StackPanel.page">
+      <Setter Property="Spacing" Value="8" />
+      <Setter Property="Margin" Value="6,14,6,6" />
+    </Style>
+    <Style Selector="TextBlock.field">
+      <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+      <Setter Property="Margin" Value="0,6,0,0" />
+    </Style>
+    <Style Selector="NumericUpDown">
+      <Setter Property="Width" Value="170" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="MinWidth" Value="260" />
+    </Style>
+  </Window.Styles>
+
+  <DockPanel Margin="18">
+    <DockPanel DockPanel.Dock="Bottom" Margin="0,14,0,0">
+      <Button DockPanel.Dock="Left" Content="{l:T 'Reset to defaults'}" Command="{Binding ResetCommand}" />
+      <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+        <Button Classes="primary" Content="{l:T OK}" MinWidth="96" HorizontalContentAlignment="Center" IsDefault="True" Click="OnOk" />
+        <Button Content="{l:T Cancel}" MinWidth="96" HorizontalContentAlignment="Center" IsCancel="True" Click="OnCancel" />
+      </StackPanel>
+    </DockPanel>
+
+    <TabControl>
+      <!-- ===== General ===== -->
+      <TabItem Header="{l:T General}">
+        <ScrollViewer>
+          <StackPanel Classes="page">
+            <CheckBox IsChecked="{Binding S.ReopenLastProject}" Content="{l:T 'Reopen the last project on launch'}" />
+            <CheckBox IsChecked="{Binding S.ConfirmDelete}" Content="{l:T 'Confirm before deleting rows, slots and lore sections'}" />
+            <TextBlock Classes="field" Text="{l:T 'Interface scale (%)'}" />
+            <NumericUpDown Value="{Binding UiScalePercent}" Minimum="75" Maximum="250" Increment="5" FormatString="0" />
+            <TextBlock Classes="field" Text="{l:T Language}" />
+            <ComboBox ItemsSource="{Binding Languages}" SelectedItem="{Binding S.Language}" />
+            <TextBlock Classes="hint" Text="{l:T 'Translations are JSON files in the lang folder; the interface text itself is the key. A new language applies after a restart.'}" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===== Autosave & backup ===== -->
+      <TabItem Header="{l:T 'Autosave &amp; backup'}">
+        <ScrollViewer>
+          <StackPanel Classes="page">
+            <CheckBox IsChecked="{Binding S.RecoveryEnabled}" Content="{l:T 'Keep recovery data while a project has unsaved changes'}" />
+            <TextBlock Classes="field" Text="{l:T 'Recovery interval (seconds)'}" />
+            <NumericUpDown Value="{Binding S.RecoveryIntervalSeconds}" Minimum="5" Maximum="3600" Increment="5" FormatString="0" />
+            <TextBlock Classes="field" Text="{l:T 'Recovery folder'}" />
+            <DockPanel>
+              <Button DockPanel.Dock="Right" Content="{l:T 'Browse…'}" Command="{Binding BrowseRecoveryFolderCommand}" Margin="6,0,0,0" />
+              <TextBox Text="{Binding RecoveryFolder}" Watermark="{Binding RecoveryFolderHint}" />
+            </DockPanel>
+            <TextBlock Classes="hint" Text="{l:T 'Newly added images are kept here until the project is saved.'}" />
+
+            <CheckBox IsChecked="{Binding S.AutosaveToFile}" Content="{l:T 'Also autosave to the project file'}" Margin="0,10,0,0" />
+            <TextBlock Classes="field" Text="{l:T 'Autosave every (minutes)'}" />
+            <NumericUpDown Value="{Binding S.AutosaveMinutes}" Minimum="1" Maximum="240" Increment="1" FormatString="0" />
+            <TextBlock Classes="hint" Text="{l:T 'Unchanged images are copied as raw data, so large projects are not re-encoded.'}" />
+
+            <TextBlock Classes="field" Text="{l:T 'Backups kept on save'}" Margin="0,10,0,0" />
+            <NumericUpDown Value="{Binding S.BackupCount}" Minimum="0" Maximum="20" Increment="1" FormatString="0" />
+            <ComboBox SelectedIndex="{Binding BackupModeIndex}">
+              <ComboBoxItem Content="{l:T 'Layout and text only (small .bakN.json files)'}" />
+              <ComboBoxItem Content="{l:T 'Full project file (.bakN, as large as the project)'}" />
+            </ComboBox>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===== Export defaults ===== -->
+      <TabItem Header="{l:T 'Export defaults'}">
+        <ScrollViewer>
+          <StackPanel Classes="page">
+            <TextBlock Classes="hint" Text="{l:T 'Used for projects that have not been exported yet; each project remembers its own last choices.'}" />
+            <TextBlock Classes="field" Text="{l:T 'Scale mode'}" />
+            <ComboBox SelectedIndex="{Binding ExportScaleIndex}">
+              <ComboBoxItem Content="{l:T 'Auto — native resolution / row export px'}" />
+              <ComboBoxItem Content="2×" />
+              <ComboBoxItem Content="4×" />
+              <ComboBoxItem Content="8×" />
+              <ComboBoxItem Content="{l:T 'Custom scale'}" />
+              <ComboBoxItem Content="{l:T 'Target width in pixels'}" />
+            </ComboBox>
+            <TextBlock Classes="field" Text="{l:T 'Max long edge in pixels (0 = no limit)'}" />
+            <NumericUpDown Value="{Binding ExportMaxLongEdge}" Minimum="0" Maximum="400000" Increment="1000" FormatString="0" />
+            <TextBlock Classes="hint" Text="{l:T 'Many viewers cannot open images larger than 65 535 px on a side.'}" />
+            <TextBlock Classes="field" Text="{l:T 'PNG compression'}" />
+            <ComboBox SelectedIndex="{Binding ExportCompressionIndex}">
+              <ComboBoxItem Content="{l:T 'Fast — larger file'}" />
+              <ComboBoxItem Content="{l:T Balanced}" />
+              <ComboBoxItem Content="{l:T 'Small — slower'}" />
+            </ComboBox>
+            <CheckBox IsChecked="{Binding ExportUseGpu}" Content="{l:T 'Render on the GPU when possible'}" />
+            <CheckBox IsChecked="{Binding ExportOpenFolder}" Content="{l:T 'Open the folder when done'}" />
+            <TextBlock Classes="field" Text="{l:T 'Default export folder'}" />
+            <DockPanel>
+              <Button DockPanel.Dock="Right" Content="{l:T 'Browse…'}" Command="{Binding BrowseExportFolderCommand}" Margin="6,0,0,0" />
+              <TextBox Text="{Binding ExportFolder}" Watermark="{l:T 'Next to the project file'}" />
+            </DockPanel>
+            <TextBlock Classes="field" Text="{l:T 'File name pattern'}" />
+            <TextBox Text="{Binding ExportPattern}" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===== Editor ===== -->
+      <TabItem Header="{l:T Editor}">
+        <ScrollViewer>
+          <StackPanel Classes="page">
+            <TextBlock Classes="field" Text="{l:T 'Zoom when a project opens'}" />
+            <ComboBox SelectedIndex="{Binding DefaultZoomIndex}">
+              <ComboBoxItem Content="{l:T 'Fit to width'}" />
+              <ComboBoxItem Content="{l:T 'Last used zoom of the project'}" />
+            </ComboBox>
+            <CheckBox IsChecked="{Binding S.ShowSlotPlaceholders}" Content="{l:T 'Show striped placeholders in empty slots'}" />
+            <TextBlock Classes="field" Text="{l:T 'Default height of new rows (sheet units)'}" />
+            <NumericUpDown Value="{Binding S.DefaultRowHeight}" Minimum="40" Maximum="4000" Increment="10" FormatString="0" />
+            <TextBlock Classes="field" Text="{l:T 'Template for new pages'}" />
+            <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding DefaultTemplate}" />
+            <TextBlock Classes="hint" Text="{l:T 'Empty = the built-in page. Create templates with Page ▸ Save Page as Template.'}" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===== Performance ===== -->
+      <TabItem Header="{l:T Performance}">
+        <ScrollViewer>
+          <StackPanel Classes="page">
+            <TextBlock Classes="field" Text="{l:T 'Preview image cache (MB)'}" />
+            <NumericUpDown Value="{Binding S.PreviewCacheMb}" Minimum="64" Maximum="16384" Increment="64" FormatString="0" />
+            <TextBlock Classes="field" Text="{l:T 'Preview quality'}" />
+            <ComboBox SelectedIndex="{Binding PreviewQualityIndex}">
+              <ComboBoxItem Content="{l:T Fast}" />
+              <ComboBoxItem Content="{l:T Balanced}" />
+              <ComboBoxItem Content="{l:T High}" />
+            </ComboBox>
+            <TextBlock Classes="field" Text="{l:T 'Export worker threads (0 = one per CPU core)'}" />
+            <NumericUpDown Value="{Binding S.ExportThreads}" Minimum="0" Maximum="64" Increment="1" FormatString="0" />
+            <TextBlock Classes="hint" Text="{l:T 'More threads export faster and use more memory; the export dialog shows the estimate.'}" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===== Defaults for new projects ===== -->
+      <TabItem Header="{l:T 'New projects'}">
+        <ScrollViewer>
+          <StackPanel Classes="page">
+            <TextBlock Classes="hint" Text="{l:T 'The sheet style every new project starts with.'}" />
+            <TextBlock Classes="field" Text="{l:T Accent}" />
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <ItemsControl ItemsSource="{Binding AccentPresets}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="5" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="m:NamedColor">
+                    <Button Classes="swatch" ToolTip.Tip="{Binding Name}"
+                            Command="{Binding $parent[ItemsControl].((vm:SettingsDialogViewModel)DataContext).PickStyleAccentCommand}"
+                            CommandParameter="{Binding Hex}">
+                      <Border Background="{Binding Hex}" />
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <TextBox Text="{Binding StyleAccent, UpdateSourceTrigger=LostFocus}" Width="96" Classes="mono" />
+            </StackPanel>
+            <TextBlock Classes="field" Text="{l:T Paper}" />
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <ItemsControl ItemsSource="{Binding PaperPresets}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="5" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="m:NamedColor">
+                    <Button Classes="swatch" ToolTip.Tip="{Binding Name}"
+                            Command="{Binding $parent[ItemsControl].((vm:SettingsDialogViewModel)DataContext).PickStylePaperCommand}"
+                            CommandParameter="{Binding Hex}">
+                      <Border Background="{Binding Hex}" />
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+              <TextBox Text="{Binding StylePaper, UpdateSourceTrigger=LostFocus}" Width="96" Classes="mono" />
+            </StackPanel>
+            <TextBlock Classes="field" Text="{l:T 'Lore column width (%)'}" />
+            <NumericUpDown Value="{Binding StyleLoreWidth}" Minimum="24" Maximum="52" Increment="1" FormatString="0" />
+            <CheckBox IsChecked="{Binding StyleSlotFrames}" Content="{l:T 'Slot frames (outline and tint)'}" />
+            <Grid ColumnDefinitions="Auto,14,Auto" RowDefinitions="Auto,6,Auto,6,Auto,6,Auto" Margin="0,6,0,0">
+              <TextBlock Grid.Row="0" Classes="label" Text="{l:T 'Page border'}" />
+              <ComboBox Grid.Row="0" Grid.Column="2" ItemsSource="{Binding BorderKinds}" SelectedItem="{Binding StylePageBorder}" />
+              <TextBlock Grid.Row="2" Classes="label" Text="{l:T 'Row border'}" />
+              <ComboBox Grid.Row="2" Grid.Column="2" ItemsSource="{Binding BorderKinds}" SelectedItem="{Binding StyleRowBorder}" />
+              <TextBlock Grid.Row="4" Classes="label" Text="{l:T 'Details border'}" />
+              <ComboBox Grid.Row="4" Grid.Column="2" ItemsSource="{Binding BorderKinds}" SelectedItem="{Binding StyleDetailsBorder}" />
+              <TextBlock Grid.Row="6" Classes="label" Text="{l:T 'Lore border'}" />
+              <ComboBox Grid.Row="6" Grid.Column="2" ItemsSource="{Binding BorderKinds}" SelectedItem="{Binding StyleLoreBorder}" />
+            </Grid>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
+</Window>

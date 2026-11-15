@@ -1,0 +1,109 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SolumanirSheetDesignerStudio.App.ViewModels"
+        xmlns:l="using:SolumanirSheetDesignerStudio.App.Services"
+        x:Class="SolumanirSheetDesignerStudio.App.Dialogs.ExportDialog"
+        x:DataType="vm:ExportDialogViewModel"
+        Title="{l:T 'Export PNG'}"
+        Width="880" Height="640" MinWidth="760" MinHeight="520"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+  <!-- Export dialog (handoff 6.4): the resulting size of every page is shown before anything is rendered. -->
+  <DockPanel Margin="20">
+    <DockPanel DockPanel.Dock="Bottom" Margin="0,14,0,0">
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+        <Button Classes="primary" Content="{l:T Export}" MinWidth="110" HorizontalContentAlignment="Center" IsDefault="True"
+                IsEnabled="{Binding CanExport}" Click="OnOk" />
+        <Button Content="{l:T Cancel}" MinWidth="96" HorizontalContentAlignment="Center" IsCancel="True" Click="OnCancel" />
+      </StackPanel>
+      <StackPanel Spacing="4" Margin="0,0,16,0">
+        <TextBlock Classes="info" Text="{Binding Summary}" />
+        <TextBlock Classes="warning" Text="{Binding Warning}" />
+      </StackPanel>
+    </DockPanel>
+
+    <Grid ColumnDefinitions="360,20,*">
+      <!-- options -->
+      <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="7" Margin="0,0,10,0">
+          <TextBlock Classes="heading" Text="{l:T PAGES}" />
+          <ComboBox SelectedIndex="{Binding ScopeIndex}" HorizontalAlignment="Stretch">
+            <ComboBoxItem Content="{l:T 'Current page'}" />
+            <ComboBoxItem Content="{l:T 'Selected pages (tick them on the right)'}" />
+            <ComboBoxItem Content="{l:T 'All pages'}" />
+          </ComboBox>
+
+          <TextBlock Classes="heading" Text="{l:T DESTINATION}" Margin="0,10,0,0" />
+          <DockPanel>
+            <Button DockPanel.Dock="Right" Content="{l:T 'Browse…'}" Command="{Binding BrowseFolderCommand}" Margin="6,0,0,0" />
+            <TextBox Text="{Binding Folder}" Watermark="{l:T 'Folder'}" />
+          </DockPanel>
+          <TextBlock Classes="label" Text="{l:T 'File name pattern'}" Margin="0,4,0,0" />
+          <TextBox Text="{Binding NamePattern}" />
+          <TextBlock Classes="hint" Text="{Binding FileExample}" />
+          <TextBlock Classes="hint" Text="{Binding TokenHint}" />
+
+          <TextBlock Classes="heading" Text="{l:T RESOLUTION}" Margin="0,10,0,0" />
+          <ComboBox SelectedIndex="{Binding ScaleModeIndex}" HorizontalAlignment="Stretch">
+            <ComboBoxItem Content="{l:T 'Auto — native resolution / row export px'}" />
+            <ComboBoxItem Content="{l:T '2× (3200 px wide)'}" />
+            <ComboBoxItem Content="{l:T '4× (6400 px wide)'}" />
+            <ComboBoxItem Content="{l:T '8× (12800 px wide)'}" />
+            <ComboBoxItem Content="{l:T 'Custom scale'}" />
+            <ComboBoxItem Content="{l:T 'Target width in pixels'}" />
+          </ComboBox>
+          <NumericUpDown Value="{Binding CustomScale}" Minimum="0.1" Maximum="1000" Increment="0.5" FormatString="0.##"
+                         IsVisible="{Binding IsCustomScale}" HorizontalAlignment="Stretch" />
+          <NumericUpDown Value="{Binding TargetWidth}" Minimum="16" Maximum="400000" Increment="100" FormatString="0"
+                         IsVisible="{Binding IsTargetWidth}" HorizontalAlignment="Stretch" />
+
+          <TextBlock Classes="label" Text="{l:T 'Max long edge (pixels)'}" Margin="0,4,0,0" />
+          <NumericUpDown Value="{Binding MaxLongEdge}" Minimum="256" Maximum="400000" Increment="1000" FormatString="0"
+                         IsEnabled="{Binding IsSizeLimited}" HorizontalAlignment="Stretch" />
+          <CheckBox IsChecked="{Binding UnlimitedSize}" Content="{l:T 'No limit'}" />
+
+          <TextBlock Classes="heading" Text="{l:T OUTPUT}" Margin="0,10,0,0" />
+          <TextBlock Classes="label" Text="{l:T 'PNG compression'}" />
+          <ComboBox SelectedIndex="{Binding CompressionIndex}" HorizontalAlignment="Stretch">
+            <ComboBoxItem Content="{l:T 'Fast — larger file'}" />
+            <ComboBoxItem Content="{l:T Balanced}" />
+            <ComboBoxItem Content="{l:T 'Small — slower'}" />
+          </ComboBox>
+          <CheckBox IsChecked="{Binding Transparent}" Content="{l:T 'Transparent background (no paper)'}" />
+          <CheckBox IsChecked="{Binding UseGpu}" Content="{l:T 'Render on the GPU when possible'}" IsEnabled="{Binding GpuAvailable}" />
+          <TextBlock Classes="hint" Text="{Binding GpuHint}" />
+          <CheckBox IsChecked="{Binding OpenFolder}" Content="{l:T 'Open the folder when done'}" />
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- result per page -->
+      <DockPanel Grid.Column="2">
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+          <Button DockPanel.Dock="Right" Classes="flat" Content="{l:T 'Tick all / none'}" Command="{Binding CheckAllCommand}" IsVisible="{Binding IsSelectedScope}" />
+          <TextBlock Classes="heading" Text="{l:T 'RESULTING SIZE PER PAGE'}" VerticalAlignment="Center" />
+        </DockPanel>
+        <ScrollViewer>
+          <ItemsControl ItemsSource="{Binding Rows}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:ExportPageRow">
+                <Border Classes="card" Margin="0,0,0,5" Padding="10,7" Opacity="{Binding IsIncluded, Converter={x:Static l:Converters.DimWhenFalse}}">
+                  <DockPanel>
+                    <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsChecked}" Margin="0,0,8,0" VerticalAlignment="Center"
+                              IsVisible="{Binding $parent[ItemsControl].((vm:ExportDialogViewModel)DataContext).IsSelectedScope}" />
+                    <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Size}" HorizontalAlignment="Right" />
+                      <TextBlock Classes="hint" Text="{Binding Note}" HorizontalAlignment="Right" TextWrapping="NoWrap" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                      <TextBlock Classes="hint" Text="{Binding Number}" VerticalAlignment="Center" />
+                      <TextBlock Text="{Binding Name}" FontFamily="{StaticResource BodyFont}" FontSize="16" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                  </DockPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </DockPanel>
+    </Grid>
+  </DockPanel>
+</Window>

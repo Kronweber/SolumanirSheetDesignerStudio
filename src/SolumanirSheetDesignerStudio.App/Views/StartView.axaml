@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SolumanirSheetDesignerStudio.App.ViewModels"
+             xmlns:l="using:SolumanirSheetDesignerStudio.App.Services"
+             x:Class="SolumanirSheetDesignerStudio.App.Views.StartView"
+             x:DataType="vm:StartViewModel">
+  <!-- Start screen: New / Open, recent projects with thumbnails, and recovery of unsaved work. -->
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel MaxWidth="980" Margin="40,36,40,40" Spacing="22">
+      <StackPanel Spacing="4">
+        <TextBlock Text="SOLUMANIR SHEET DESIGNER STUDIO" FontFamily="{StaticResource DisplayFont}" FontWeight="Bold" FontSize="30"
+                   LetterSpacing="2.1" Foreground="{StaticResource AccentBrush}" />
+        <TextBlock Classes="label" Text="{l:T 'Compose species reference sheets and export them at full resolution.'}" />
+      </StackPanel>
+
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <Button x:Name="NewButton" Classes="primary" Content="{l:T 'New project'}" Padding="18,8" />
+        <Button x:Name="OpenButton" Content="{l:T 'Open project…'}" Padding="18,8" />
+      </StackPanel>
+
+      <!-- recovery -->
+      <Border Classes="card" BorderBrush="{StaticResource AccentBrush}" Padding="14" IsVisible="{Binding HasRecoveries}">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="heading" Text="{l:T 'RECOVER UNSAVED WORK'}" />
+          <TextBlock Classes="hint" Text="{l:T 'The app did not close cleanly last time. These projects have changes that were never saved.'}" />
+          <ItemsControl ItemsSource="{Binding Recoveries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:RecoveryItemViewModel">
+                <DockPanel Margin="0,4">
+                  <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <Button Classes="primary" Content="{l:T Recover}"
+                            Command="{Binding $parent[ItemsControl].((vm:StartViewModel)DataContext).RecoverCommand}" CommandParameter="{Binding}" />
+                    <Button Content="{l:T Discard}"
+                            Command="{Binding $parent[ItemsControl].((vm:StartViewModel)DataContext).DiscardRecoveryCommand}" CommandParameter="{Binding}" />
+                  </StackPanel>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" FontWeight="Bold" />
+                    <TextBlock Classes="hint" Text="{Binding Details}" />
+                  </StackPanel>
+                </DockPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <!-- recents -->
+      <StackPanel Spacing="10">
+        <TextBlock Classes="heading" Text="{l:T 'RECENT PROJECTS'}" />
+        <TextBlock Classes="hint" Text="{l:T 'Nothing here yet. Create a project or open one — it will be listed here next time.'}" IsVisible="{Binding !HasRecents}" />
+        <ItemsControl ItemsSource="{Binding Recents}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:RecentItemViewModel">
+              <Border Classes="card" Margin="0,0,0,8" Background="{StaticResource PanelBrush}">
+                <DockPanel>
+                  <Border DockPanel.Dock="Left" Width="96" Height="96" Background="#1A1715" CornerRadius="2" ClipToBounds="True" Margin="0,0,14,0">
+                    <Image Source="{Binding Thumbnail}" Stretch="UniformToFill" VerticalAlignment="Top" />
+                  </Border>
+                  <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <Button Classes="primary" Content="{l:T Open}" IsEnabled="{Binding !Missing}"
+                            Command="{Binding $parent[ItemsControl].((vm:StartViewModel)DataContext).OpenRecentCommand}" CommandParameter="{Binding}" />
+                    <Button Content="{Binding PinLabel}"
+                            Command="{Binding $parent[ItemsControl].((vm:StartViewModel)DataContext).TogglePinCommand}" CommandParameter="{Binding}" />
+                    <Button Content="{l:T 'Show in folder'}" IsEnabled="{Binding !Missing}"
+                            Command="{Binding $parent[ItemsControl].((vm:StartViewModel)DataContext).RevealRecentCommand}" CommandParameter="{Binding}" />
+                    <Button Classes="flat" Content="✕" ToolTip.Tip="{l:T 'Remove from this list'}"
+                            Command="{Binding $parent[ItemsControl].((vm:StartViewModel)DataContext).RemoveRecentCommand}" CommandParameter="{Binding}" />
+                  </StackPanel>
+                  <StackPanel VerticalAlignment="Center" Spacing="3" Margin="0,0,12,0">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Classes="projectTitle" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="★" Foreground="{StaticResource AccentBrush}" IsVisible="{Binding Pinned}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Classes="hint" Text="{Binding Path}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Classes="hint" Text="{Binding Modified}" Classes.warning="{Binding Missing}" />
+                  </StackPanel>
+                </DockPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

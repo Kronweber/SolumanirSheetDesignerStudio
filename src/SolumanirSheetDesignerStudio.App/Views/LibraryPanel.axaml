@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SolumanirSheetDesignerStudio.App.ViewModels"
+             xmlns:l="using:SolumanirSheetDesignerStudio.App.Services"
+             x:Class="SolumanirSheetDesignerStudio.App.Views.LibraryPanel"
+             x:DataType="vm:LibraryViewModel">
+  <!-- Image library: every asset of the project, stored once and referenced by id. -->
+  <DockPanel Margin="10,10,6,10">
+    <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,8,4,0">
+      <TextBlock Classes="hint" Text="{Binding Summary}" />
+      <TextBlock Classes="hint" Text="{l:T 'Drag an image onto the sheet to place it.'}" TextWrapping="Wrap" />
+      <Grid ColumnDefinitions="*,6,*">
+        <Button Grid.Column="0" Content="{l:T 'Replace file…'}" Command="{Binding ReplaceCommand}" CommandParameter="{Binding Selected}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                ToolTip.Tip="{l:T 'Swap the selected image for another file; every placement keeps its position.'}" />
+        <Button Grid.Column="2" Content="{l:T 'Show usage'}" Command="{Binding ShowUsageCommand}" CommandParameter="{Binding Selected}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+      </Grid>
+      <Grid ColumnDefinitions="*,6,*">
+        <Button Grid.Column="0" Content="{l:T 'Export file…'}" Command="{Binding ExportOriginalCommand}" CommandParameter="{Binding Selected}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+        <Button Grid.Column="2" Content="{l:T 'Remove unused'}" Command="{Binding RemoveUnusedCommand}"
+                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+      </Grid>
+    </StackPanel>
+    <ListBox x:Name="List" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:LibraryItemViewModel">
+          <Grid ColumnDefinitions="Auto,*" Margin="6" Background="Transparent">
+            <Border Width="54" Height="54" Background="#1A1715" CornerRadius="2" ClipToBounds="True">
+              <Image Source="{Binding Thumbnail}" Stretch="Uniform" />
+            </Border>
+            <StackPanel Grid.Column="1" Margin="9,0,0,0" Spacing="1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Name}" />
+              <TextBlock Classes="hint" Text="{Binding Details}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+              <TextBlock Classes="hint" Text="{Binding UsageText}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </DockPanel>
+</UserControl>

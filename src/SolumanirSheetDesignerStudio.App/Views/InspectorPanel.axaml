@@ -1,0 +1,206 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SolumanirSheetDesignerStudio.App.ViewModels"
+             xmlns:m="using:SolumanirSheetDesignerStudio.Core.Model"
+             xmlns:l="using:SolumanirSheetDesignerStudio.App.Services"
+             x:Class="SolumanirSheetDesignerStudio.App.Views.InspectorPanel"
+             x:DataType="vm:InspectorViewModel">
+  <!-- Context-sensitive inspector: the group matching the selection is shown. -->
+  <UserControl.Styles>
+    <Style Selector="StackPanel.group">
+      <Setter Property="Spacing" Value="6" />
+      <Setter Property="Margin" Value="0,0,0,16" />
+    </Style>
+    <Style Selector="TextBlock.field">
+      <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+      <Setter Property="Margin" Value="0,4,0,0" />
+    </Style>
+    <Style Selector="NumericUpDown">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="14,12,14,14" IsEnabled="{Binding CanEdit}">
+      <TextBlock Classes="heading" Text="{Binding Heading}" Margin="0,0,0,10" />
+
+      <!-- ================= nothing selected: page + sheet style ================= -->
+      <StackPanel IsVisible="{Binding IsSheet}">
+        <StackPanel Classes="group">
+          <TextBlock Classes="field" Text="{l:T 'Project title'}" />
+          <TextBox Text="{Binding ProjectTitle}" Watermark="{l:T 'World name'}" />
+          <TextBlock Classes="field" Text="{l:T 'Species name'}" />
+          <TextBox Text="{Binding PageName}" Watermark="{l:T 'Species name'}" />
+          <TextBlock Classes="field" Text="{l:T Subtitle}" />
+          <TextBox Text="{Binding Subtitle}" Watermark="{l:T 'Epithet or one-line description'}" />
+        </StackPanel>
+
+        <TextBlock Classes="heading" Text="{l:T 'SHEET STYLE'}" Margin="0,0,0,6" />
+        <StackPanel Classes="group">
+          <CheckBox IsChecked="{Binding UsePageStyle}" Content="{l:T 'Custom style for this page'}" />
+          <TextBlock Classes="hint" Text="{Binding StyleScope}" />
+
+          <TextBlock Classes="field" Text="{l:T Accent}" />
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <ItemsControl ItemsSource="{Binding AccentPresets}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="5" /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="m:NamedColor">
+                  <Button Classes="swatch" ToolTip.Tip="{Binding Name}"
+                          Command="{Binding $parent[ItemsControl].((vm:InspectorViewModel)DataContext).PickAccentCommand}"
+                          CommandParameter="{Binding Hex}">
+                    <Border Background="{Binding Hex}" />
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBox Text="{Binding Accent, UpdateSourceTrigger=LostFocus}" Width="92" Classes="mono" ToolTip.Tip="{l:T 'Any colour as #RRGGBB'}" />
+          </StackPanel>
+
+          <TextBlock Classes="field" Text="{l:T Paper}" />
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <ItemsControl ItemsSource="{Binding PaperPresets}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="5" /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="m:NamedColor">
+                  <Button Classes="swatch" ToolTip.Tip="{Binding Name}"
+                          Command="{Binding $parent[ItemsControl].((vm:InspectorViewModel)DataContext).PickPaperCommand}"
+                          CommandParameter="{Binding Hex}">
+                    <Border Background="{Binding Hex}" />
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBox Text="{Binding Paper, UpdateSourceTrigger=LostFocus}" Width="92" Classes="mono" ToolTip.Tip="{l:T 'Any colour as #RRGGBB'}" />
+          </StackPanel>
+
+          <DockPanel Margin="0,4,0,0">
+            <TextBlock DockPanel.Dock="Right" Classes="label" Text="{Binding LoreWidthText}" />
+            <TextBlock Classes="field" Text="{l:T 'Lore column width'}" Margin="0" />
+          </DockPanel>
+          <Slider Minimum="24" Maximum="52" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding LoreWidth}" />
+
+          <CheckBox IsChecked="{Binding SlotFrames}" Content="{l:T 'Slot frames (outline and tint)'}" />
+        </StackPanel>
+
+        <TextBlock Classes="heading" Text="{l:T BORDERS}" Margin="0,0,0,6" />
+        <Grid Classes="group" ColumnDefinitions="Auto,12,*" RowDefinitions="Auto,6,Auto,6,Auto,6,Auto" Margin="0,0,0,16">
+          <TextBlock Grid.Row="0" Classes="label" Text="{l:T Page}" />
+          <ComboBox Grid.Row="0" Grid.Column="2" ItemsSource="{Binding BorderKinds}" SelectedItem="{Binding PageBorder}" />
+          <TextBlock Grid.Row="2" Classes="label" Text="{l:T Rows}" />
+          <ComboBox Grid.Row="2" Grid.Column="2" ItemsSource="{Binding BorderKinds}" SelectedItem="{Binding RowBorder}" />
+          <TextBlock Grid.Row="4" Classes="label" Text="{l:T Details}" />
+          <ComboBox Grid.Row="4" Grid.Column="2" ItemsSource="{Binding BorderKinds}" SelectedItem="{Binding DetailsBorder}" />
+          <TextBlock Grid.Row="6" Classes="label" Text="{l:T Lore}" />
+          <ComboBox Grid.Row="6" Grid.Column="2" ItemsSource="{Binding BorderKinds}" SelectedItem="{Binding LoreBorder}" />
+        </Grid>
+
+        <TextBlock Classes="info" Text="{Binding SheetReadout}" />
+      </StackPanel>
+
+      <!-- ================= row / details row ================= -->
+      <StackPanel IsVisible="{Binding IsSection}">
+        <StackPanel Classes="group">
+          <TextBlock Classes="field" Text="{l:T Name}" />
+          <TextBox Text="{Binding SectionName}" Watermark="{l:T 'Row name'}" />
+
+          <TextBlock Classes="field" Text="{l:T 'Height mode'}" />
+          <ComboBox SelectedIndex="{Binding SizingModeIndex}">
+            <ComboBoxItem Content="{l:T 'Fixed height'}" />
+            <ComboBoxItem Content="{l:T 'Auto height (hug the images)'}" />
+          </ComboBox>
+
+          <StackPanel Spacing="6" IsVisible="{Binding IsFixedSizing}">
+            <TextBlock Classes="field" Text="{l:T 'Image area height (sheet units)'}" />
+            <NumericUpDown Value="{Binding SectionHeight}" Minimum="40" Maximum="4000" Increment="10" FormatString="0" />
+          </StackPanel>
+          <StackPanel Spacing="6" IsVisible="{Binding IsAutoSizing}">
+            <TextBlock Classes="field" Text="{l:T 'Max image height (empty = no limit)'}" />
+            <NumericUpDown Value="{Binding SectionMaxHeight}" Minimum="0" Maximum="8000" Increment="10" FormatString="0" Watermark="{l:T none}" />
+          </StackPanel>
+
+          <TextBlock Classes="field" Text="{l:T 'Export px (image height in the PNG)'}" />
+          <NumericUpDown Value="{Binding SectionExportPx}" Minimum="0" Maximum="100000" Increment="100" FormatString="0" Watermark="{l:T native}" />
+          <TextBlock Classes="hint" Text="{l:T 'Empty = each file keeps its native resolution.'}" />
+        </StackPanel>
+        <TextBlock Classes="info" Text="{Binding SectionReadout}" Margin="0,0,0,12" />
+        <Button Content="{l:T '+ Add slot'}" Command="{Binding AddSlotHereCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+      </StackPanel>
+
+      <!-- ================= slot / part ================= -->
+      <StackPanel IsVisible="{Binding IsSlot}">
+        <StackPanel Classes="group">
+          <TextBlock Classes="field" Text="{l:T Label}" />
+          <TextBox Text="{Binding SlotLabel}" Watermark="{l:T Label}" />
+          <TextBlock Classes="hint" Text="{Binding PartPosition}" />
+        </StackPanel>
+
+        <TextBlock Classes="heading" Text="{l:T IMAGE}" Margin="0,0,0,6" />
+        <StackPanel Classes="group">
+          <TextBlock Text="{Binding ImageName}" TextTrimming="CharacterEllipsis" />
+          <TextBlock Classes="hint" Text="{Binding ImageDetails}" IsVisible="{Binding HasImage}" />
+          <TextBlock Classes="warning" Text="{l:T 'The image file is missing from the project.'}" IsVisible="{Binding IsImageMissing}" />
+          <Grid ColumnDefinitions="*,6,*">
+            <Button Grid.Column="0" Content="{l:T 'Replace…'}" Command="{Binding ReplaceImageCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+            <Button Grid.Column="2" Content="{l:T Clear}" Command="{Binding ClearImageCommand}" IsEnabled="{Binding HasImage}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+          </Grid>
+          <Button Content="{l:T 'Reveal in image library'}" Command="{Binding RevealInLibraryCommand}" IsEnabled="{Binding HasImage}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+
+          <TextBlock Classes="field" Text="{Binding ScaleLabel}" />
+          <NumericUpDown Value="{Binding PartScale}" Minimum="5" Maximum="{Binding ScaleMaximum}" Increment="5" FormatString="0" />
+          <Slider Minimum="5" Maximum="{Binding ScaleSliderMaximum}" Value="{Binding PartScaleSlider}" />
+          <TextBlock Classes="hint" Text="{Binding ScaleHint}" />
+        </StackPanel>
+
+        <StackPanel Classes="group" IsVisible="{Binding HasImage}">
+          <TextBlock Classes="info" Text="{Binding ExportReadout}" />
+          <TextBlock Classes="warning" Text="{Binding UpscaleWarning}" IsVisible="{Binding IsUpscaled}" />
+        </StackPanel>
+
+        <TextBlock Classes="heading" Text="{l:T SPLIT}" Margin="0,0,0,6" />
+        <Grid ColumnDefinitions="*,6,*">
+          <Button Grid.Column="0" Content="{l:T 'Split slot'}" Command="{Binding SplitCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  ToolTip.Tip="{l:T 'Adds a stacked image in the same slot'}" />
+          <Button Grid.Column="2" Content="{l:T 'Remove part'}" Command="{Binding RemovePartCommand}" IsEnabled="{Binding IsSplit}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+        </Grid>
+      </StackPanel>
+
+      <!-- ================= lore section ================= -->
+      <StackPanel IsVisible="{Binding IsLore}">
+        <StackPanel Classes="group">
+          <TextBlock Classes="field" Text="{l:T Title}" />
+          <TextBox Text="{Binding LoreTitle}" Watermark="{l:T 'Section title'}" />
+
+          <TextBlock Classes="field" Text="{l:T 'Text (Markdown)'}" />
+          <WrapPanel>
+            <Button Classes="flat" Focusable="False" Content="B" FontWeight="Bold" Command="{Binding ApplyFormatCommand}" CommandParameter="bold" ToolTip.Tip="{l:T Bold}" />
+            <Button Classes="flat" Focusable="False" Content="I" FontStyle="Italic" Command="{Binding ApplyFormatCommand}" CommandParameter="italic" ToolTip.Tip="{l:T Italic}" />
+            <Button Classes="flat" Focusable="False" Content="S" Command="{Binding ApplyFormatCommand}" CommandParameter="strike" ToolTip.Tip="{l:T Strikethrough}" />
+            <Button Classes="flat" Focusable="False" Content="&lt;/&gt;" Command="{Binding ApplyFormatCommand}" CommandParameter="code" ToolTip.Tip="{l:T Code}" />
+            <Button Classes="flat" Focusable="False" Content="{l:T Link}" Command="{Binding ApplyFormatCommand}" CommandParameter="link" />
+            <Button Classes="flat" Focusable="False" Content="H" Command="{Binding ApplyFormatCommand}" CommandParameter="heading" ToolTip.Tip="{l:T Heading}" />
+            <Button Classes="flat" Focusable="False" Content="•" Command="{Binding ApplyFormatCommand}" CommandParameter="list" ToolTip.Tip="{l:T 'Bulleted list'}" />
+            <Button Classes="flat" Focusable="False" Content="1." Command="{Binding ApplyFormatCommand}" CommandParameter="numbered" ToolTip.Tip="{l:T 'Numbered list'}" />
+            <Button Classes="flat" Focusable="False" Content="❝" Command="{Binding ApplyFormatCommand}" CommandParameter="quote" ToolTip.Tip="{l:T Quote}" />
+            <Button Classes="flat" Focusable="False" Content="―" Command="{Binding ApplyFormatCommand}" CommandParameter="rule" ToolTip.Tip="{l:T Rule}" />
+            <Button Classes="flat" Focusable="False" Content="▦" Command="{Binding ApplyFormatCommand}" CommandParameter="table" ToolTip.Tip="{l:T Table}" />
+          </WrapPanel>
+          <TextBox Classes="mono" Text="{Binding LoreBody}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="220" MaxHeight="520"
+                   SelectionStart="{Binding LoreSelectionStart, Mode=TwoWay}" SelectionEnd="{Binding LoreSelectionEnd, Mode=TwoWay}"
+                   Watermark="{l:T 'Markdown…'}" />
+          <Button Content="{l:T 'Edit on the sheet'}" Command="{Binding EditOnSheetCommand}" HorizontalAlignment="Left" />
+        </StackPanel>
+        <Expander Header="{l:T 'Markdown cheat-sheet'}" HorizontalAlignment="Stretch">
+          <TextBlock Text="{Binding CheatSheet}" FontFamily="{StaticResource MonoFont}" FontSize="12" TextWrapping="Wrap" />
+        </Expander>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
