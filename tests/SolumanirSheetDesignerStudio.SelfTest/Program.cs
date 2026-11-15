@@ -208,7 +208,7 @@ internal static class Program
             s.Zoom = 0.75;
             s.LastExport = new ExportOptions { ScaleMode = ExportScaleMode.X4, Folder = "/tmp/out" };
 
-            var req = s.CreateSaveRequest(projPath, relocate: true, backupCount: 2, BackupMode.JsonOnly, new Dictionary<string, byte[]> { [s.CurrentPageId] = new byte[] { 1, 2, 3 } });
+            var req = s.CreateSaveRequest(projPath, relocate: true, new Dictionary<string, byte[]> { [s.CurrentPageId] = new byte[] { 1, 2, 3 } });
             var result = ProjectFile.Save(req);
             s.CompleteSave(req);
             Check(result.ImageCount == 2 && result.Warnings.Count == 0, "only referenced images are written");
@@ -218,20 +218,21 @@ internal static class Program
             Check(ReadAll(s.Assets, s.Assets.Get(a1.Id)!).AsSpan().SequenceEqual(File.ReadAllBytes(f1)), "relocated bytes are identical");
             Check(!File.Exists(projPath + ".tmp"), "no temp file left");
 
-            // undo brings back a2; second save must write it again and rotate a JSON backup
+            // undo brings back a2; second save must write it again
             s.Undo();
             Check(s.IsDirty && s.CurrentPage.FindPart(partB)!.Value.Part.ImageId == a2.Id, "undo after save");
-            req = s.CreateSaveRequest(projPath, true, 2, BackupMode.JsonOnly, null);
+            req = s.CreateSaveRequest(projPath, true, null);
             result = ProjectFile.Save(req);
             s.CompleteSave(req);
-            Check(result.ImageCount == 2 && File.Exists(projPath + ".bak1.json"), "second save + json backup");
+            Check(result.ImageCount == 2, "second save");
+            Check(Directory.EnumerateFiles(_work).All(f => !Path.GetFileName(f).StartsWith(Path.GetFileName(projPath) + ".")), "saving writes nothing but the project file next to it");
             Check(ReadAll(s.Assets, s.Assets.Get(a2.Id)!).AsSpan().SequenceEqual(File.ReadAllBytes(f2)), "raw copy from the old project file is intact");
             Check(s.Assets.Get(a3.Id)!.Source.Path != projPath, "asset dropped from the file was moved out before the swap");
             Check(ReadAll(s.Assets, s.Assets.Get(a3.Id)!).AsSpan().SequenceEqual(File.ReadAllBytes(f3)), "moved-out asset is intact");
 
             // save a copy must not touch the session
             string copy = Path.Combine(_work, "Copy.speciesproj");
-            var copyReq = s.CreateSaveRequest(copy, relocate: false, 0, BackupMode.JsonOnly, null);
+            var copyReq = s.CreateSaveRequest(copy, relocate: false, null);
             ProjectFile.Save(copyReq);
             Check(File.Exists(copy) && s.FilePath == projPath && s.Assets.Get(a1.Id)!.Source.Path == projPath, "save a copy leaves the session alone");
         }
@@ -262,14 +263,13 @@ internal static class Program
             Check(tail.AsSpan().SequenceEqual(File.ReadAllBytes(f1).AsSpan(69_990)), "range stream seeks");
         }
 
-        // full-file backups
+        // saving an opened project over itself
         using (var s = DocumentSession.Open(projPath, Path.Combine(_work, "rec-c")))
         {
             s.ApplyToPage("x", p => p with { Subtitle = "changed" });
-            var req = s.CreateSaveRequest(projPath, true, 1, BackupMode.FullFile, null);
+            var req = s.CreateSaveRequest(projPath, true, null);
             ProjectFile.Save(req);
             s.CompleteSave(req);
-            Check(File.Exists(projPath + ".bak1") && ProjectFile.Load(projPath + ".bak1").Project.Pages[0].Subtitle == "", "full-file backup holds the previous version");
             Check(ProjectFile.Load(projPath).Project.Pages[0].Subtitle == "changed", "new version saved");
         }
 
@@ -333,11 +333,10 @@ internal static class Program
         Check(s.Assets.Get("i2")!.MimeType == "image/jpeg" && s.Assets.Get("i1")!.PixelHeight == 100, "legacy image metadata");
 
         // Saving upgrades the same path to v2 while reading the images out of the v1 file being replaced.
-        var req = s.CreateSaveRequest(path, true, 1, BackupMode.FullFile, null);
+        var req = s.CreateSaveRequest(path, true, null);
         ProjectFile.Save(req);
         s.CompleteSave(req);
         Check(!s.IsLegacySource && File.ReadAllBytes(path)[0] == (byte)'P', "saved as v2 zip");
-        Check(File.ReadAllBytes(path + ".bak1").AsSpan(0, 8).SequenceEqual(Encoding.ASCII.GetBytes("SPSHEET1")), "v1 file kept as backup");
         var re = ProjectFile.Load(path);
         Check(!re.IsLegacy && re.Assets.Count == 2 && re.Project.Pages[0].Rows[1].Sizing.ExportPx == 2000, "upgraded file loads");
         Check(ReadAll(s.Assets, s.Assets.Get("i1")!).AsSpan().SequenceEqual(img1), "images survive the upgrade");
@@ -355,7 +354,7 @@ internal static class Program
         string partA = s.CurrentPage.Rows[0].Slots[0].Parts[0].Id, partB = s.CurrentPage.Rows[0].Slots[1].Parts[0].Id;
         var a1 = s.ImportImage(f1, probe);
         s.ApplyToPage("img", p => p.SetPartImage(partA, a1.Id));
-        var req = s.CreateSaveRequest(projPath, true, 0, BackupMode.JsonOnly, null);
+        var req = s.CreateSaveRequest(projPath, true, null);
         ProjectFile.Save(req);
         s.CompleteSave(req);
         Check(!s.Recovery.HasSnapshot, "no snapshot while clean");
@@ -831,7 +830,7 @@ internal static class Program
             s.ApplyToPage("img", p => p.SetPartImage(partA, a1.Id).SetPartImage(partB, a2.Id));
 
             var stale = s.CreateRecoverySnapshot();
-            var req = s.CreateSaveRequest(projPath, true, 0, BackupMode.JsonOnly, null);
+            var req = s.CreateSaveRequest(projPath, true, null);
             Check(s.Assets.Count == 2, "creating a save request has no side effects");
             ProjectFile.Save(req);
             s.CompleteSave(req);
@@ -839,7 +838,7 @@ internal static class Program
 
             // typing after a save starts a new undo step, so the saved state stays reachable
             s.ApplyToPage("t", p => p with { Name = "A" }, "name");
-            var req2 = s.CreateSaveRequest(projPath, true, 0, BackupMode.JsonOnly, null);
+            var req2 = s.CreateSaveRequest(projPath, true, null);
             ProjectFile.Save(req2);
             s.CompleteSave(req2);
             s.ApplyToPage("t", p => p with { Name = "AB" }, "name");
@@ -851,7 +850,7 @@ internal static class Program
             {
                 var pending = s.ImportImage(f3, probe);
                 s.ApplyToPage("t", p => p with { Subtitle = "s" });
-                var req3 = s.CreateSaveRequest(projPath, true, 0, BackupMode.JsonOnly, null);
+                var req3 = s.CreateSaveRequest(projPath, true, null);
                 ProjectFile.Save(req3);
                 s.CompleteSave(req3);
                 Check(s.Assets.Contains(pending.Id) && File.Exists(pending.Source.Path), "an image being imported is not pruned or deleted by a save");
@@ -867,23 +866,23 @@ internal static class Program
             byte[] bad = (byte[])good.Clone();
             bad[^1] ^= 0xFF;
             File.WriteAllBytes(working, bad);
-            var reqBad = s.CreateSaveRequest(projPath, true, 2, BackupMode.FullFile, null);
+            var reqBad = s.CreateSaveRequest(projPath, true, null);
             Check(Throws<IOException>(() => ProjectFile.Save(reqBad)), "a changed image fails the save");
-            Check(File.ReadAllBytes(projPath).AsSpan().SequenceEqual(before) && !File.Exists(projPath + ".tmp") && !File.Exists(projPath + ".bak1"), "a failed save leaves the project file, and nothing else, behind");
+            Check(File.ReadAllBytes(projPath).AsSpan().SequenceEqual(before) && !File.Exists(projPath + ".tmp"), "a failed save leaves the project file, and nothing else, behind");
             File.Delete(working);
-            Check(Throws<IOException>(() => ProjectFile.Save(s.CreateSaveRequest(projPath, true, 0, BackupMode.JsonOnly, null))), "a missing image fails the save");
+            Check(Throws<IOException>(() => ProjectFile.Save(s.CreateSaveRequest(projPath, true, null))), "a missing image fails the save");
             Check(File.ReadAllBytes(projPath).AsSpan().SequenceEqual(before), "…and the project file is still the previous one");
             File.WriteAllBytes(working, good);
 
-            // --- full-file backups: the previous version becomes .bak1 and the project file always exists ---
-            var reqOk = s.CreateSaveRequest(projPath, true, 2, BackupMode.FullFile, null);
+            // --- once the image is back, the next save goes through ---
+            var reqOk = s.CreateSaveRequest(projPath, true, null);
             ProjectFile.Save(reqOk);
             s.CompleteSave(reqOk);
-            Check(File.Exists(projPath) && File.ReadAllBytes(projPath + ".bak1").AsSpan().SequenceEqual(before), "full-file backup holds the previous version");
+            Check(File.Exists(projPath) && !File.ReadAllBytes(projPath).AsSpan().SequenceEqual(before), "the next save replaces the project file");
             Check(ReadAll(s.Assets, s.Assets.Get(a3.Id)!).AsSpan().SequenceEqual(good) && ReadAll(s.Assets, s.Assets.Get(a1.Id)!).AsSpan().SequenceEqual(File.ReadAllBytes(f1)), "assets read correctly from the new file");
 
             // --- a copy must never replace the file the open project lives in ---
-            Check(Throws<IOException>(() => ProjectFile.Save(s.CreateSaveRequest(projPath, relocate: false, 0, BackupMode.JsonOnly, null))), "Save a Copy onto the project's own file is refused");
+            Check(Throws<IOException>(() => ProjectFile.Save(s.CreateSaveRequest(projPath, relocate: false, null))), "Save a Copy onto the project's own file is refused");
 
             // --- redo shows the page the change led to, wherever the user has gone since ---
             string first = s.CurrentPageId;
@@ -1006,7 +1005,7 @@ internal static class Program
         var after = s.ImportImage(small, probe);
         string pa = s.CurrentPage.Rows[0].Slots[0].Parts[0].Id, pb = s.CurrentPage.Rows[0].Slots[1].Parts[0].Id;
         s.ApplyToPage("img", p => p.SetPartImage(pa, "aaa_big").SetPartImage(pb, after.Id));
-        var req = s.CreateSaveRequest(path, true, 0, BackupMode.JsonOnly, null);
+        var req = s.CreateSaveRequest(path, true, null);
         var sw = System.Diagnostics.Stopwatch.StartNew();
         ProjectFile.Save(req);
         s.CompleteSave(req);

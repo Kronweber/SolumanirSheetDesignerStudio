@@ -61,7 +61,7 @@ public sealed partial class EditorViewModel
     private async Task<bool> SaveCoreAsync(string path, bool relocate, bool autosave)
     {
         _lastSaveAttempt = DateTime.UtcNow;
-        var request = Session.CreateSaveRequest(path, relocate, Settings.BackupCount, Settings.BackupMode, Thumbnails.Snapshot());
+        var request = Session.CreateSaveRequest(path, relocate, Thumbnails.Snapshot());
         try
         {
             var result = await Task.Run(() => ProjectFile.Save(request));

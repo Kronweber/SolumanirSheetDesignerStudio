@@ -272,7 +272,6 @@ public sealed partial class SettingsDialogViewModel : ObservableObject
 
     // Enums and records need small adapters; everything else binds straight to S.
 
-    public int BackupModeIndex { get => (int)S.BackupMode; set => S.BackupMode = (BackupMode)Math.Clamp(value, 0, 1); }
     public int DefaultZoomIndex { get => (int)S.DefaultZoom; set => S.DefaultZoom = (ZoomDefault)Math.Clamp(value, 0, 1); }
     public int PreviewQualityIndex { get => (int)S.PreviewQuality; set => S.PreviewQuality = (PreviewQuality)Math.Clamp(value, 0, 2); }
     public string DefaultTemplate { get => S.DefaultPageTemplate ?? ""; set => S.DefaultPageTemplate = string.IsNullOrEmpty(value) ? null : value; }

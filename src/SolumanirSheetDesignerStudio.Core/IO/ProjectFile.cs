@@ -11,8 +11,6 @@ using SolumanirSheetDesignerStudio.Core.Model;
 
 namespace SolumanirSheetDesignerStudio.Core.IO;
 
-public enum BackupMode { JsonOnly, FullFile }
-
 public sealed class LoadedProject
 {
     public required Project Project { get; init; }
@@ -39,8 +37,6 @@ public sealed class SaveRequest
     public IReadOnlyDictionary<string, byte[]>? Thumbs { get; init; }
     /// <summary>True for Save / Save As (assets are re-pointed at the new file); false for "Save a Copy".</summary>
     public bool Relocate { get; init; } = true;
-    public int BackupCount { get; init; }
-    public BackupMode BackupMode { get; init; } = BackupMode.JsonOnly;
     /// <summary>Folder that receives assets which are not written (unreferenced) but still live in the file being replaced.</summary>
     public string? KeepAliveDir { get; init; }
 }
@@ -459,7 +455,7 @@ public static class ProjectFile
             throw new IOException("The project file is busy (images are still being read). Try again in a moment.");
         try
         {
-            ReplaceFile(tmp, path, req.BackupCount, req.BackupMode, warnings);
+            File.Move(tmp, path, overwrite: true);
 
             foreach (var a in written)
             {
@@ -475,76 +471,6 @@ public static class ProjectFile
         {
             assets.Gate.ExitWrite();
         }
-    }
-
-    /// <summary>
-    /// Puts <paramref name="tmp"/> in place of <paramref name="path"/>, keeping the last K versions as
-    /// <c>name.speciesproj.bak1…K</c> (full files) or <c>….bakN.json</c> (layout and text only).
-    /// The project file exists at every moment: either the old one or the new one.
-    /// </summary>
-    private static void ReplaceFile(string tmp, string path, int backupCount, BackupMode mode, List<string> warnings)
-    {
-        string? fullBackup = null;
-        if (backupCount > 0 && File.Exists(path))
-        {
-            try
-            {
-                string suffix = mode == BackupMode.JsonOnly ? ".json" : "";
-                string Name(int i) => $"{path}.bak{i}{suffix}";
-
-                PathUtil.TryDelete(Name(backupCount));
-                for (int i = backupCount - 1; i >= 1; i--)
-                    if (File.Exists(Name(i))) File.Move(Name(i), Name(i + 1), overwrite: true);
-
-                if (mode == BackupMode.FullFile) fullBackup = Name(1);
-                else if (ReadProjectJson(path) is { } json) PathUtil.WriteAtomic(Name(1), json);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
-            {
-                warnings.Add("Backup could not be written: " + ex.Message);
-            }
-        }
-
-        if (fullBackup == null)
-        {
-            File.Move(tmp, path, overwrite: true);
-            return;
-        }
-        try
-        {
-            // Atomic where the platform allows: the old file becomes the backup as the new one takes its name.
-            File.Replace(tmp, path, fullBackup, ignoreMetadataErrors: true);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
-        {
-            if (!File.Exists(tmp)) throw;
-            warnings.Add("Backup could not be written: " + ex.Message);
-            File.Move(tmp, path, overwrite: true);
-        }
-    }
-
-    /// <summary>Raw project JSON of an existing file (v2: project.json, v1: the JSON block), or null.</summary>
-    public static byte[]? ReadProjectJson(string path)
-    {
-        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-        var magic = new byte[12];
-        if (fs.ReadAtLeast(magic, 12, throwOnEndOfStream: false) < 12) return null;
-        if (magic.AsSpan(0, 8).SequenceEqual(LegacyMagic))
-        {
-            uint n = BinaryPrimitives.ReadUInt32BigEndian(magic.AsSpan(8));
-            if (12 + (long)n > fs.Length || n > MaxJsonBytes) return null;
-            var json = new byte[n];
-            fs.ReadExactly(json);
-            return json;
-        }
-        fs.Position = 0;
-        using var zip = new ZipArchive(fs, ZipArchiveMode.Read, leaveOpen: true);
-        var entry = zip.GetEntry(JsonEntry);
-        if (entry == null) return null;
-        using var es = entry.Open();
-        using var ms = new MemoryStream();
-        es.CopyTo(ms);
-        return ms.ToArray();
     }
 
     /// <summary>First-page thumbnail stored in a project file, for the start screen. Null when absent or unreadable.</summary>

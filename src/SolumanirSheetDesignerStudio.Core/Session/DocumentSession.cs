@@ -321,7 +321,7 @@ public sealed class DocumentSession : IDisposable
     // ---------- persistence ----------
 
     /// <summary>Captures everything a background save needs (call on the UI thread). Has no side effects.</summary>
-    public SaveRequest CreateSaveRequest(string path, bool relocate, int backupCount, BackupMode backupMode, IReadOnlyDictionary<string, byte[]>? thumbs)
+    public SaveRequest CreateSaveRequest(string path, bool relocate, IReadOnlyDictionary<string, byte[]>? thumbs)
     {
         return new SaveRequest
         {
@@ -333,8 +333,6 @@ public sealed class DocumentSession : IDisposable
             Assets = Assets,
             Thumbs = thumbs,
             Relocate = relocate,
-            BackupCount = backupCount,
-            BackupMode = backupMode,
             KeepAliveDir = Recovery.ImagesDir,
         };
     }

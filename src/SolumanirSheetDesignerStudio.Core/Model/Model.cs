@@ -6,6 +6,7 @@ namespace SolumanirSheetDesignerStudio.Core.Model;
 public static class AppInfo
 {
     public const string Name = "Solumanir Sheet Designer Studio";
+    public const string Author = "Kronweber";
     public const string DataFolderName = "SolumanirSheetDesignerStudio";
     public const string ProjectExtension = ".speciesproj";
     public const int FormatVersion = 2;

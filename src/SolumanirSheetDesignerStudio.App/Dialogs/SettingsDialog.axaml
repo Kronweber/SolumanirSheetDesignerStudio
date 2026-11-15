@@ -52,8 +52,8 @@
         </ScrollViewer>
       </TabItem>
 
-      <!-- ===== Autosave & backup ===== -->
-      <TabItem Header="{l:T 'Autosave &amp; backup'}">
+      <!-- ===== Autosave & recovery ===== -->
+      <TabItem Header="{l:T 'Autosave &amp; recovery'}">
         <ScrollViewer>
           <StackPanel Classes="page">
             <CheckBox IsChecked="{Binding S.RecoveryEnabled}" Content="{l:T 'Keep recovery data while a project has unsaved changes'}" />
@@ -70,13 +70,6 @@
             <TextBlock Classes="field" Text="{l:T 'Autosave every (minutes)'}" />
             <NumericUpDown Value="{Binding S.AutosaveMinutes}" Minimum="1" Maximum="240" Increment="1" FormatString="0" />
             <TextBlock Classes="hint" Text="{l:T 'Unchanged images are copied as raw data, so large projects are not re-encoded.'}" />
-
-            <TextBlock Classes="field" Text="{l:T 'Backups kept on save'}" Margin="0,10,0,0" />
-            <NumericUpDown Value="{Binding S.BackupCount}" Minimum="0" Maximum="20" Increment="1" FormatString="0" />
-            <ComboBox SelectedIndex="{Binding BackupModeIndex}">
-              <ComboBoxItem Content="{l:T 'Layout and text only (small .bakN.json files)'}" />
-              <ComboBoxItem Content="{l:T 'Full project file (.bakN, as large as the project)'}" />
-            </ComboBox>
           </StackPanel>
         </ScrollViewer>
       </TabItem>

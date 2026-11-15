@@ -70,13 +70,11 @@ public sealed class AppSettings
     public double UiScale { get; set; } = 1.0;
     public bool ConfirmDelete { get; set; } = true;
 
-    // Autosave & backup
+    // Autosave & recovery
     public bool RecoveryEnabled { get; set; } = true;
     public int RecoveryIntervalSeconds { get; set; } = 30;
     public bool AutosaveToFile { get; set; }
     public int AutosaveMinutes { get; set; } = 5;
-    public int BackupCount { get; set; } = 3;
-    public BackupMode BackupMode { get; set; } = BackupMode.JsonOnly;
     public string? RecoveryFolder { get; set; }
 
     // Export defaults
@@ -117,7 +115,6 @@ public sealed class AppSettings
         UiScale = Math.Clamp(double.IsFinite(UiScale) ? UiScale : 1, 0.75, 2.5);
         RecoveryIntervalSeconds = Math.Clamp(RecoveryIntervalSeconds, 5, 3600);
         AutosaveMinutes = Math.Clamp(AutosaveMinutes, 1, 240);
-        BackupCount = Math.Clamp(BackupCount, 0, 20);
         DefaultRowHeight = Math.Clamp(double.IsFinite(DefaultRowHeight) ? DefaultRowHeight : Sizing.DefaultHeight, Sizing.MinHeight, 4000);
         PreviewCacheMb = Math.Clamp(PreviewCacheMb, 64, 16384);
         ExportThreads = Math.Clamp(ExportThreads, 0, 64);

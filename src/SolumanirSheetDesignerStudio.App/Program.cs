@@ -201,7 +201,7 @@ internal static class Program
             foreach (string warning in session.LoadWarnings) Console.Error.WriteLine("warning: " + warning);
 
             clock.Restart();
-            var request = session.CreateSaveRequest(output, relocate: false, 0, BackupMode.JsonOnly, session.LoadedThumbs);
+            var request = session.CreateSaveRequest(output, relocate: false, session.LoadedThumbs);
             var result = ProjectFile.Save(request);
             foreach (string warning in result.Warnings) Console.Error.WriteLine("warning: " + warning);
             Console.WriteLine($"{output}\t{session.Project.Pages.Count} pages\t{result.ImageCount} images\t{result.FileBytes} bytes\tload {loadSeconds:F2}s\tsave {clock.Elapsed.TotalSeconds:F2}s");

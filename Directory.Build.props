@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Version>0.1.0</Version>
     <Product>Solumanir Sheet Designer Studio</Product>
-    <Authors>Solumanir Sheet Designer Studio</Authors>
+    <Authors>Kronweber</Authors>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 
     <!-- Third-party package versions (one place to bump). SkiaSharp/HarfBuzzSharp must match what Avalonia.Skia uses. -->
