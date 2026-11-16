@@ -321,7 +321,23 @@ public static class ProjectOps
         var pages = (project.Pages ?? ImmutableList<Page>.Empty).Where(p => p != null)
             .Select(p => NormalizePage(p) is var n && pageIds.Add(n.Id) ? n : NormalizePage(p with { Id = Ids.New() })).ToImmutableList();
         if (pages.Count == 0) pages = pages.Add(Factory.NewPage());
-        return project with { Title = project.Title ?? "", Style = project.Style ?? SheetStyle.Default, Pages = pages };
+        return project with { Title = project.Title ?? "", Style = NormalizeStyle(project.Style) ?? SheetStyle.Default, Pages = pages };
+    }
+
+    // A number too large for a double reads as infinity, which cannot be written back. Such values return to their defaults.
+
+    private static SheetStyle? NormalizeStyle(SheetStyle? style) =>
+        style == null || double.IsFinite(style.LoreWidth) ? style : style with { LoreWidth = SheetStyle.Default.LoreWidth };
+
+    private static Sizing NormalizeSizing(Sizing? sizing)
+    {
+        sizing ??= new Sizing();
+        return sizing with
+        {
+            Height = double.IsFinite(sizing.Height) ? sizing.Height : Sizing.DefaultHeight,
+            MaxHeight = sizing.MaxHeight is { } heightMax && double.IsFinite(heightMax) ? heightMax : null,
+            ExportPx = sizing.ExportPx is { } heightExportPx && double.IsFinite(heightExportPx) ? heightExportPx : null,
+        };
     }
 
     public static Page NormalizePage(Page pg)
@@ -339,11 +355,11 @@ public static class ProjectOps
         {
             Id = Unique(s.Id),
             Name = s.Name ?? "",
-            Sizing = s.Sizing ?? new Sizing(),
+            Sizing = NormalizeSizing(s.Sizing),
             Slots = (s.Slots ?? ImmutableList<Slot>.Empty).Where(x => x != null).Select(slot =>
             {
                 var parts = (slot.Parts ?? ImmutableList<Part>.Empty).Where(x => x != null)
-                    .Select(x => Unique(x.Id) is var id && id == x.Id ? x : x with { Id = id }).ToImmutableList();
+                    .Select(x => Unique(x.Id) is var id && id == x.Id && double.IsFinite(x.Scale) ? x : x with { Id = id, Scale = double.IsFinite(x.Scale) ? x.Scale : 100 }).ToImmutableList();
                 if (parts.Count == 0) parts = parts.Add(new Part { Id = NewUnique() });
                 return slot with { Id = Unique(slot.Id), Label = slot.Label ?? "", Parts = parts };
             }).ToImmutableList(),
@@ -358,6 +374,7 @@ public static class ProjectOps
             Details = Fix(pg.Details ?? Factory.NewDetails()),
             Lore = (pg.Lore ?? ImmutableList<LoreSection>.Empty).Where(l => l != null)
                 .Select(l => l with { Id = Unique(l.Id), Title = l.Title ?? "", Body = l.Body ?? "" }).ToImmutableList(),
+            Style = NormalizeStyle(pg.Style),
         };
     }
 }

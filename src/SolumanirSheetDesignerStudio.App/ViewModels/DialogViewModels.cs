@@ -55,10 +55,12 @@ public sealed partial class ExportDialogViewModel : ObservableObject
         }
 
         _scopeIndex = selectedPageIds.Count > 1 ? 1 : (int)o.Scope;
-        _folder = o.Folder ?? editor.Settings.ExportDefaults.Folder ?? (editor.Session.FilePath is { } f ? Path.GetDirectoryName(f) ?? "" : Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
+        // A folder remembered in the project may come from another operating system, where it is not a full path here.
+        static string? GetFolderQualified(string? folder) => Path.IsPathFullyQualified(folder ?? "") ? folder : null;
+        _folder = GetFolderQualified(o.Folder) ?? GetFolderQualified(editor.Settings.ExportDefaults.Folder) ?? (editor.Session.FilePath is { } f ? Path.GetDirectoryName(f) ?? "" : Environment.GetFolderPath(Environment.SpecialFolder.MyPictures));
         _namePattern = string.IsNullOrWhiteSpace(o.NamePattern) ? ExportOptions.DefaultPattern : o.NamePattern;
         _scaleModeIndex = (int)o.ScaleMode;
-        _customScale = (decimal)o.CustomScale;
+        _customScale = (decimal)Math.Clamp(o.CustomScale, 0.1, 1000);
         _targetWidth = o.TargetWidth;
         _unlimitedSize = o.MaxLongEdge <= 0;
         _maxLongEdge = o.MaxLongEdge > 0 ? o.MaxLongEdge : ExportOptions.DefaultMaxLongEdge;

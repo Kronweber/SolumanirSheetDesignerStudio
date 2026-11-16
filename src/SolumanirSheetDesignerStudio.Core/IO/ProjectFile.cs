@@ -202,7 +202,10 @@ public static class ProjectFile
                         result.Warnings.Add($"Image \"{name}\" is truncated in the legacy file.");
                         break; // every later offset is unreliable too
                     }
-                    if (!string.IsNullOrEmpty(id) && size > 0)
+                    // The id names the image's files in the working folder and in the saved project.
+                    if (!string.IsNullOrEmpty(id) && FileNaming.Sanitize(id, "") != id)
+                        result.Warnings.Add($"Image \"{name}\" has an id that cannot be used and was left out.");
+                    else if (!string.IsNullOrEmpty(id) && size > 0)
                     {
                         result.Assets.Add(new ImageAsset
                         {

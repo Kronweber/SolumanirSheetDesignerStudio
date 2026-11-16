@@ -544,5 +544,5 @@ public sealed partial class MainViewModel : ObservableObject
         $"{AppInfo.Name} {typeof(MainViewModel).Assembly.GetName().Version?.ToString(3)}\n" +
         Loc.T("Author: {0}", AppInfo.Author) + "\n\n" +
         Loc.T("Compose species reference sheets and export them as very high-resolution PNGs.") + "\n\n" +
-        Loc.T("Fonts: Cinzel, Alegreya and Alegreya Sans (SIL Open Font License)."));
+        Loc.T("Fonts: Cinzel, Alegreya, Alegreya Sans and Cascadia Mono (SIL Open Font License)."));
 }

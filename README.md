@@ -34,4 +34,4 @@ To open project files by double-click, see `packaging/`.
 
 ## Credits
 
-Avalonia, SkiaSharp, HarfBuzzSharp, Markdig and CommunityToolkit.Mvvm. The fonts are Cinzel, Alegreya and Alegreya Sans, under the SIL Open Font License (see `assets/fonts`).
+Avalonia, SkiaSharp, HarfBuzzSharp, Markdig and CommunityToolkit.Mvvm. The fonts are Cinzel, Alegreya, Alegreya Sans and Cascadia Mono, under the SIL Open Font License (see `assets/fonts`).

@@ -13,9 +13,9 @@ public static class Shell
             if (OperatingSystem.IsWindows())
                 Process.Start(new ProcessStartInfo("explorer.exe", File.Exists(path) ? $"/select,\"{path}\"" : $"\"{dir}\"") { UseShellExecute = false });
             else if (OperatingSystem.IsMacOS())
-                Process.Start(new ProcessStartInfo("open", File.Exists(path) ? $"-R \"{path}\"" : $"\"{dir}\"") { UseShellExecute = false });
+                Process.Start("open", File.Exists(path) ? new[] { "-R", path } : new[] { dir });
             else
-                Process.Start(new ProcessStartInfo("xdg-open", $"\"{dir}\"") { UseShellExecute = false });
+                Process.Start("xdg-open", new[] { dir });
         }
         catch (Exception)
         {

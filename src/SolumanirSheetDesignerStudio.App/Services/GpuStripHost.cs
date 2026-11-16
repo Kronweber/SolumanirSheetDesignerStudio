@@ -29,10 +29,14 @@ public sealed class GpuStripHost : Control, IGpuStripRenderer
         public bool Completed, Success, Abandoned;
     }
 
+    /// <summary>How long strips stay on the CPU after frames stopped arriving, before the GPU is tried again.</summary>
+    private const long PauseRetryMs = 30_000;
+
     private readonly ConcurrentQueue<Job> _jobs = new();
     private volatile bool _unavailable;
     private readonly int _maxSize = 8192;
     private int _timeouts;
+    private long _timeRetryMs;
 
     public GpuStripHost()
     {
@@ -43,12 +47,15 @@ public sealed class GpuStripHost : Control, IGpuStripRenderer
 
     public int MaxSurfaceSize => _maxSize;
 
-    /// <summary>False once it is known that no GPU context is available (software rendering).</summary>
-    public bool IsAvailable => !_unavailable;
+    /// <summary>
+    /// False once it is known that no GPU context is available (software rendering), and for a while after frames
+    /// stopped arriving (window minimised).
+    /// </summary>
+    public bool IsAvailable => !_unavailable && Environment.TickCount64 >= Interlocked.Read(ref _timeRetryMs);
 
     public bool TryRender(SKImageInfo info, Action<SKCanvas> draw, IntPtr pixels, int rowBytes, CancellationToken ct)
     {
-        if (_unavailable) return false;
+        if (!IsAvailable) return false;
         var job = new Job { Info = info, Draw = draw, Pixels = pixels, RowBytes = rowBytes };
         _jobs.Enqueue(job);
         Dispatcher.UIThread.Post(InvalidateVisual, DispatcherPriority.Render);
@@ -69,7 +76,11 @@ public sealed class GpuStripHost : Control, IGpuStripRenderer
             job.Abandoned = true;
         }
         ct.ThrowIfCancellationRequested();
-        if (!signalled && Interlocked.Increment(ref _timeouts) >= 2) _unavailable = true; // e.g. window minimised: no frames
+        if (!signalled && Interlocked.Increment(ref _timeouts) >= 2) // e.g. window minimised: no frames
+        {
+            Interlocked.Exchange(ref _timeouts, 0);
+            Interlocked.Exchange(ref _timeRetryMs, Environment.TickCount64 + PauseRetryMs);
+        }
         return false;
     }
 

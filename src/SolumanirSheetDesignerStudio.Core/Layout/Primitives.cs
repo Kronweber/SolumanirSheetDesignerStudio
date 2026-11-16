@@ -57,7 +57,7 @@ public enum FontFamilyId { Display, Body, Label, Mono }
 
 public enum TextAlign { Left, Center, Right }
 
-/// <summary>A font request in sheet units. Display = Cinzel, Body = Alegreya, Label = Alegreya Sans, Mono = system monospace.</summary>
+/// <summary>A font request in sheet units. Display = Cinzel, Body = Alegreya, Label = Alegreya Sans, Mono = Cascadia Mono.</summary>
 public readonly record struct FontSpec(FontFamilyId Family, int Weight, bool Italic, double Size, double LetterSpacing = 0)
 {
 }

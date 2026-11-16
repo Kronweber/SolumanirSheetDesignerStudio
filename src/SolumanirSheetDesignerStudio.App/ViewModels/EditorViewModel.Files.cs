@@ -216,8 +216,9 @@ public sealed partial class EditorViewModel
         using var busy = BeginBusy();
         // Copy the images those pages use into this project (identical files are stored once).
         var needed = chosen.SelectMany(p => p.ImageIds()).Distinct().ToList();
-        var sources = loaded.Assets.ToDictionary(a => a.Id);
-        var compressed = loaded.CompressedImages.ToDictionary(c => c.Meta.Id);
+        // A damaged file can list an id twice; the last record counts, as it does when the project is opened.
+        var sources = loaded.Assets.GroupBy(a => a.Id).ToDictionary(g => g.Key, g => g.Last());
+        var compressed = loaded.CompressedImages.GroupBy(c => c.Meta.Id).ToDictionary(g => g.Key, g => g.Last());
         var map = new Dictionary<string, string>();
         var failures = new List<string>();
         await Task.Run(() =>

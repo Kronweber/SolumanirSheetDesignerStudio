@@ -8,7 +8,7 @@ using HbFont = HarfBuzzSharp.Font;
 namespace SolumanirSheetDesignerStudio.Rendering;
 
 /// <summary>
-/// The sheet's fonts: bundled Cinzel / Alegreya / Alegreya Sans (embedded resources) with system fallbacks, shaped
+/// The sheet's fonts: bundled Cinzel / Alegreya / Alegreya Sans / Cascadia Mono (embedded resources) with system fallbacks, shaped
 /// with HarfBuzz so kerning and ligatures match a browser. Thread-safe.
 /// </summary>
 public sealed class FontLibrary : ITextShaper, IDisposable
@@ -42,7 +42,7 @@ public sealed class FontLibrary : ITextShaper, IDisposable
     public FontLibrary()
     {
         LoadBundled();
-        foreach (var (family, name) in new[] { ("Cinzel", "Cinzel"), ("Alegreya", "Alegreya"), ("AlegreyaSans", "Alegreya Sans") })
+        foreach (var (family, name) in new[] { ("Cinzel", "Cinzel"), ("Alegreya", "Alegreya"), ("AlegreyaSans", "Alegreya Sans"), ("CascadiaMono", "Cascadia Mono") })
             if (!_bundled.Any(b => b.Family == family)) _missing.Add(name);
     }
 
@@ -124,6 +124,7 @@ public sealed class FontLibrary : ITextShaper, IDisposable
             FontFamilyId.Display => "Cinzel",
             FontFamilyId.Body => "Alegreya",
             FontFamilyId.Label => "AlegreyaSans",
+            FontFamilyId.Mono => "CascadiaMono",
             _ => null,
         };
         var candidates = bundledFamily == null ? new List<Bundled>() : _bundled.Where(b => b.Family == bundledFamily).ToList();

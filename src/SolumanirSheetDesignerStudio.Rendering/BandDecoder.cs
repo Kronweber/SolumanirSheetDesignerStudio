@@ -72,12 +72,17 @@ internal sealed class BandDecoder : IDisposable
 
         bool upright = _origin == SKEncodedOrigin.TopLeft || (int)_origin == 0;
         bool unscaled = _decode == info.Size;
-        if (upright && _format == SKEncodedImageFormat.Jpeg && StartScanlines()) _mode = Mode.Scanline;
-        else if (upright && unscaled && (_format == SKEncodedImageFormat.Webp || (_format == SKEncodedImageFormat.Png && !IsInterlacedPng()))) _mode = Mode.Window;
-        else _mode = Mode.Full;
+        if (upright && _format == SKEncodedImageFormat.Jpeg && StartScanlines())
+        {
+            _mode = Mode.Scanline;
+            return;
+        }
 
         // Only the scanline reader keeps its place in the file; the others open it just while they read.
-        if (_mode != Mode.Scanline) CloseCodec();
+        // The interlace check opens the file itself. The codec is closed first so that a reader never holds two
+        // streams of one image.
+        CloseCodec();
+        _mode = upright && unscaled && (_format == SKEncodedImageFormat.Webp || (_format == SKEncodedImageFormat.Png && !IsInterlacedPng())) ? Mode.Window : Mode.Full;
     }
 
     /// <summary>Size of the (possibly reduced, upright) image the bands are cut from.</summary>

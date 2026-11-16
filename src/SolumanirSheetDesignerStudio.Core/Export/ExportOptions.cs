@@ -31,6 +31,13 @@ public sealed record ExportOptions
     public bool UseGpu { get; init; }
     public bool TransparentBackground { get; init; }
     public bool OpenFolderAfter { get; init; }
+
+    /// <summary>The same options with whatever a hand-edited file left null or not finite put back to its default.</summary>
+    public ExportOptions GetSanitized() => this with
+    {
+        SelectedPageIds = SelectedPageIds ?? ImmutableList<string>.Empty,
+        CustomScale = double.IsFinite(CustomScale) ? CustomScale : new ExportOptions().CustomScale,
+    };
 }
 
 public static class FileNaming

@@ -119,9 +119,15 @@ public sealed class AppSettings
         PreviewCacheMb = Math.Clamp(PreviewCacheMb, 64, 16384);
         ExportThreads = Math.Clamp(ExportThreads, 0, 64);
         LastZoom = Math.Clamp(double.IsFinite(LastZoom) ? LastZoom : 1, 0.1, 3);
-        ExportDefaults ??= new ExportOptions();
+        ExportDefaults = (ExportDefaults ?? new ExportOptions()).GetSanitized();
         NewProjectStyle ??= SheetStyle.Default;
+        if (!double.IsFinite(NewProjectStyle.LoreWidth)) NewProjectStyle = NewProjectStyle with { LoreWidth = SheetStyle.Default.LoreWidth };
         Window ??= new WindowSettings();
+        var windowDefault = new WindowSettings();
+        if (!double.IsFinite(Window.Width)) Window.Width = windowDefault.Width;
+        if (!double.IsFinite(Window.Height)) Window.Height = windowDefault.Height;
+        if (!double.IsFinite(Window.LeftPanelWidth)) Window.LeftPanelWidth = windowDefault.LeftPanelWidth;
+        if (!double.IsFinite(Window.RightPanelWidth)) Window.RightPanelWidth = windowDefault.RightPanelWidth;
         Language = string.IsNullOrWhiteSpace(Language) ? "en" : Language;
     }
 }
@@ -181,7 +187,12 @@ public sealed class RecentProjects
         try
         {
             if (File.Exists(AppPaths.RecentsFile))
-                return JsonSerializer.Deserialize<RecentProjects>(File.ReadAllBytes(AppPaths.RecentsFile), ProjectJson.Options) ?? new RecentProjects();
+            {
+                var recents = JsonSerializer.Deserialize<RecentProjects>(File.ReadAllBytes(AppPaths.RecentsFile), ProjectJson.Options) ?? new RecentProjects();
+                recents.Items ??= new List<RecentProject>();
+                recents.Items.RemoveAll(i => i == null || string.IsNullOrWhiteSpace(i.Path));
+                return recents;
+            }
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException) { }
         return new RecentProjects();

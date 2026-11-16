@@ -98,6 +98,9 @@ public static class ProjectJson
         if (doc.FormatVersion > AppInfo.FormatVersion)
             throw new InvalidProjectException($"This project was saved by a newer version of {AppInfo.Name} (format {doc.FormatVersion}).");
         doc.Project ??= new ProjectDto();
+        // A number too large for a double reads as infinity, which cannot be written back.
+        if (doc.Project.Zoom is { } zoom && !double.IsFinite(zoom)) doc.Project.Zoom = null;
+        doc.Project.LastExport = doc.Project.LastExport?.GetSanitized();
         doc.Images ??= new List<ImageMeta>();
         doc.Images.RemoveAll(m => m == null || string.IsNullOrEmpty(m.Id));
         return doc;

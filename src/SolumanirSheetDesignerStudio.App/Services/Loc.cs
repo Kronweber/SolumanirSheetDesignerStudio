@@ -30,7 +30,8 @@ public static class Loc
                     if (!File.Exists(file)) continue;
                     var loaded = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllBytes(file));
                     if (loaded == null) continue;
-                    foreach (var kv in loaded) table[kv.Key] = kv.Value;
+                    foreach (var kv in loaded)
+                        if (kv.Value != null) table[kv.Key] = kv.Value;
                 }
                 catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
                 {

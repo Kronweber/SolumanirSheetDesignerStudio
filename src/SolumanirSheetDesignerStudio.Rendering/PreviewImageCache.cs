@@ -29,7 +29,7 @@ public sealed class PreviewImageCache : IDisposable
     private readonly HashSet<(string, int)> _inFlight = new();
     private readonly List<(ImageAsset Asset, int Bucket)> _pending = new(); // used as a stack: the newest request is served first
     private readonly HashSet<string> _undecodable = new();                  // not an image Skia can read: never retried
-    private readonly Dictionary<string, long> _unreadable = new();          // I/O trouble: retried after a pause
+    private readonly Dictionary<string, long> _unreadable = new();          // I/O or memory trouble: retried after a pause
     private readonly HashSet<string> _reported = new();
     private readonly int _maxWorkers;
     private int _workers;
@@ -178,7 +178,8 @@ public sealed class PreviewImageCache : IDisposable
         catch (Exception ex)
         {
             // Decoding third-party files can fail in many ways; whatever it was, the slot just stays empty.
-            bool transient = ex is IOException or UnauthorizedAccessException;
+            // Only a file the decoder rejects is given up on; I/O trouble and a failed allocation can pass.
+            bool transient = ex is not InvalidDataException;
             bool first;
             lock (_lock)
             {

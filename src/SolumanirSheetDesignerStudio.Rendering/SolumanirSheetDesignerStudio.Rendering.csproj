@@ -12,7 +12,7 @@
     <ProjectReference Include="..\SolumanirSheetDesignerStudio.Core\SolumanirSheetDesignerStudio.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Sheet fonts (Cinzel, Alegreya, Alegreya Sans — SIL OFL). See assets/fonts/README.md for the expected files. -->
+    <!-- Sheet fonts (Cinzel, Alegreya, Alegreya Sans, Cascadia Mono— SIL OFL). See assets/fonts/README.md for the expected files. -->
     <EmbeddedResource Include="..\..\assets\fonts\*.ttf;..\..\assets\fonts\*.otf" LogicalName="Fonts/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

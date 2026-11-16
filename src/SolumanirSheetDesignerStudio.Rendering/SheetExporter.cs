@@ -32,7 +32,7 @@ public sealed class ExportResult
 /// </summary>
 public interface IGpuStripRenderer
 {
-    /// <summary>False once the renderer has found that it cannot work on this machine.</summary>
+    /// <summary>False while the renderer cannot work (no GPU context, or no frames are being drawn).</summary>
     bool IsAvailable { get; }
     int MaxSurfaceSize { get; }
     bool TryRender(SKImageInfo info, Action<SKCanvas> draw, IntPtr pixels, int rowBytes, CancellationToken ct);
