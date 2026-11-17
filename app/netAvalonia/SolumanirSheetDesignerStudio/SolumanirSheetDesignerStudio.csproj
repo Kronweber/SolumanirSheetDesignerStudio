@@ -7,6 +7,7 @@
     <ApplicationIcon>Assets\app-icon.ico</ApplicationIcon>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <Platforms>x64;x86</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
@@ -15,13 +16,13 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="$(MvvmToolkitVersion)" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SolumanirSheetDesignerStudio.Core\SolumanirSheetDesignerStudio.Core.csproj" />
-    <ProjectReference Include="..\SolumanirSheetDesignerStudio.Rendering\SolumanirSheetDesignerStudio.Rendering.csproj" />
+    <ProjectReference Include="..\..\libsCS\Core\Core.csproj" />
+    <ProjectReference Include="..\..\libsCS\Rendering\Rendering.csproj" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
     <!-- The same font files the renderer embeds, exposed to XAML as avares://SolumanirSheetDesignerStudio/Assets/Fonts#Family -->
-    <AvaloniaResource Include="..\..\assets\fonts\*.ttf;..\..\assets\fonts\*.otf" Link="Assets\Fonts\%(Filename)%(Extension)" />
+    <AvaloniaResource Include="..\..\..\assets\fonts\*.ttf;..\..\..\assets\fonts\*.otf" Link="Assets\Fonts\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <!-- Final output. Every project builds into its own bin/ and obj/ folders; after the app is built (or published)
@@ -33,9 +34,9 @@
     <Distribute Condition="'$(Distribute)' == ''">true</Distribute>
     <DistFlavour>$(Configuration)</DistFlavour>
     <DistFlavour Condition="'$(RuntimeIdentifier)' != ''">$(Configuration)-$(RuntimeIdentifier)</DistFlavour>
-    <DistRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'bin'))</DistRoot>
+    <DistRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', '..', 'bin'))</DistRoot>
     <DistAppDir>$(DistRoot)build/$(DistFlavour)/</DistAppDir>
-    <DistZip>$(DistRoot)package/$(AssemblyName)-$(Version)-$(DistFlavour).zip</DistZip>
+    <DistZip>$(DistRoot)package/$(AssemblyName)-$(VersionPrefix)-$(DistFlavour).zip</DistZip>
   </PropertyGroup>
   <Target Name="CollectBuiltApp" AfterTargets="Build" Condition="'$(Distribute)' == 'true' and '$(_IsPublishing)' != 'true'">
     <ItemGroup>
@@ -68,4 +69,6 @@
     <Message Importance="high" Text="$(AssemblyName) -> $(DistAppDir)" />
     <Message Importance="high" Text="$(AssemblyName) -> $(DistZip)" />
   </Target>
+
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\installer\BuildInstaller.props" />
 </Project>

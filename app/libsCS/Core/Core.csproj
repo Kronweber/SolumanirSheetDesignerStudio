@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <AssemblyName>SolumanirSheetDesignerStudio.Core</AssemblyName>
     <RootNamespace>SolumanirSheetDesignerStudio.Core</RootNamespace>
+    <Platforms>x64;x86</Platforms>
   </PropertyGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="SolumanirSheetDesignerStudio.SelfTest" />
+    <InternalsVisibleTo Include="SelfTest" />
   </ItemGroup>
 </Project>

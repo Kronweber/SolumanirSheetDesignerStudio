@@ -4,13 +4,15 @@ Desktop app for putting together species reference sheets (rows of model images,
 
 ## Building
 
-Needs the .NET 8 SDK, and fontconfig on Linux.
+Needs the .NET 10 SDK, and fontconfig on Linux.
 
 ```sh
 dotnet build -c Release
 ```
 
 The finished app is copied to `bin/build/Release/` and a zip of it to `bin/package/`.
+
+On Windows a Release build also needs the WiX 5 toolset with its UI extension and writes the installer to `installer/obj-x64/SolumanirSheetDesignerStudio/`.
 
 ## Using it
 

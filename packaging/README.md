@@ -5,7 +5,7 @@ Makes `.speciesproj` files open in the app by double-click.
 ## Linux
 
 ```sh
-dotnet publish src/SolumanirSheetDesignerStudio.App -c Release -r linux-x64 --self-contained -o ~/.local/opt/solumanir-sheet-designer-studio
+dotnet publish app/netAvalonia/SolumanirSheetDesignerStudio -c Release -r linux-x64 --self-contained -o ~/.local/opt/solumanir-sheet-designer-studio
 ln -s ~/.local/opt/solumanir-sheet-designer-studio/SolumanirSheetDesignerStudio ~/.local/bin/SolumanirSheetDesignerStudio
 xdg-mime install --novendor packaging/linux/solumanir-sheet-designer-studio-mime.xml
 xdg-icon-resource install --novendor --size 512 packaging/linux/solumanir-sheet-designer-studio.png solumanir-sheet-designer-studio

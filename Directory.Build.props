@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Version>0.1.0</Version>
+    <VersionPrefix>$(Version)</VersionPrefix>
     <Product>Solumanir Sheet Designer Studio</Product>
     <Authors>Kronweber</Authors>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>

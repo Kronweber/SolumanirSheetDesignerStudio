@@ -3,8 +3,9 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>SolumanirSheetDesignerStudio.SelfTest</RootNamespace>
+    <Platforms>x64;x86</Platforms>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\SolumanirSheetDesignerStudio.Core\SolumanirSheetDesignerStudio.Core.csproj" />
+    <ProjectReference Include="..\..\libsCS\Core\Core.csproj" />
   </ItemGroup>
 </Project>

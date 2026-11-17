@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <AssemblyName>SolumanirSheetDesignerStudio.Rendering</AssemblyName>
     <RootNamespace>SolumanirSheetDesignerStudio.Rendering</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Platforms>x64;x86</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="$(SkiaSharpVersion)" />
@@ -9,10 +11,10 @@
     <PackageReference Include="Markdig" Version="$(MarkdigVersion)" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SolumanirSheetDesignerStudio.Core\SolumanirSheetDesignerStudio.Core.csproj" />
+    <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <!-- Sheet fonts (Cinzel, Alegreya, Alegreya Sans, Cascadia Mono— SIL OFL). See assets/fonts/README.md for the expected files. -->
-    <EmbeddedResource Include="..\..\assets\fonts\*.ttf;..\..\assets\fonts\*.otf" LogicalName="Fonts/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\..\assets\fonts\*.ttf;..\..\..\assets\fonts\*.otf" LogicalName="Fonts/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

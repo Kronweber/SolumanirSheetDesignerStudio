@@ -13,7 +13,7 @@ using SolumanirSheetDesignerStudio.Core.Session;
 namespace SolumanirSheetDesignerStudio.SelfTest;
 
 /// <summary>
-/// Self-contained checks for the core library. Run: dotnet run --project tests/SolumanirSheetDesignerStudio.SelfTest
+/// Self-contained checks for the core library. Run: dotnet run --project app/net/SelfTest
 /// Options: --big (also exercises ZIP64 with a &gt;4 GB entry), --keep (leave the work folder for inspection).
 /// </summary>
 internal static class Program

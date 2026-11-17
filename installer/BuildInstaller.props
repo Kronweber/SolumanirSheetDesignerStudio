@@ -1,0 +1,29 @@
+<!-- Turns the built application into an MSI. The packaged project imports this file as its last element. -->
+<Project>
+
+  <PropertyGroup>
+    <!-- An SDK project built without a platform evaluates Platform to AnyCPU, which the packaging tool rejects. -->
+    <WixArch Condition="'$(Platform)' == 'x86'">x86</WixArch>
+    <WixArch Condition="'$(WixArch)' == ''">x64</WixArch>
+
+    <!-- ProjectName is not defined yet, since the SDK targets are imported after this file. -->
+    <WixSourceFile>$(MSBuildThisFileDirectory)src\$(MSBuildProjectName).wxs</WixSourceFile>
+    <WixOutputFile>$(MSBuildThisFileDirectory)obj-$(WixArch)\$(MSBuildProjectName)\$(MSBuildProjectName).msi</WixOutputFile>
+  </PropertyGroup>
+
+  <!-- The application carries its runtime, so its package installs and runs on a machine that has none.
+       Restoring for both architectures lets a build of either find its runtime pack. -->
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
+    <RuntimeIdentifier>win-$(WixArch)</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+  </PropertyGroup>
+
+  <!-- A build for another runtime, named on the command line, is not packaged. -->
+  <Target Name="BuildInstaller" AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release' AND '$(OS)' == 'Windows_NT' AND '$(RuntimeIdentifier)' == 'win-$(WixArch)'">
+    <Message Importance="high" Text="Packaging $(MSBuildProjectName) $(VersionPrefix) for $(WixArch)" />
+    <Exec Command="wix build -arch $(WixArch) -ext WixToolset.UI.wixext -o &quot;$(WixOutputFile)&quot; -d &quot;TargetDir=$(TargetDir)\&quot; -d &quot;ProjectDir=$(MSBuildProjectDirectory)\\&quot; -d &quot;VersionPrefix=$(VersionPrefix)&quot; -src &quot;$(WixSourceFile)&quot;" />
+  </Target>
+
+</Project>

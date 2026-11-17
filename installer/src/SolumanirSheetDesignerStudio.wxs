@@ -1,0 +1,53 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="Solumanir Sheet Designer Studio" Manufacturer="Kronweber" Version="$(VersionPrefix)"
+           UpgradeCode="92f411ed-8ef2-4169-87a9-65a0729cd66b" ProductCode="*"
+           InstallerVersion="200" Language="1033">
+    <SummaryInformation Description="Solumanir Sheet Designer Studio" Manufacturer="Kronweber" />
+
+    <!-- Scheduled late so the old payload is removed only once the new one is known to be good. Same-version
+         upgrades are allowed because the product code is regenerated on every build, and a rebuild of the same
+         version would otherwise install alongside the previous one. -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                  Schedule="afterInstallFinalize"
+                  AllowSameVersionUpgrades="yes" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+
+    <!-- Skips the licence page, since the product ships no licence agreement. A higher Order wins over the
+         stock publish. -->
+    <UI>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="10" />
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="10" />
+    </UI>
+
+    <Icon Id="MyIcon" SourceFile="$(ProjectDir)Assets\app-icon.ico" />
+
+    <Feature Id="MainFeature" Title="Main Feature" Level="1">
+      <Files Directory="INSTALLFOLDER" Include="$(TargetDir)**" />
+
+      <ComponentRef Id="DesktopShortcutExe" />
+      <ComponentRef Id="StartMenuShortcutExe" />
+    </Feature>
+
+    <StandardDirectory Id="DesktopFolder">
+      <Component Id="DesktopShortcutExe" Guid="2cdda56a-cb14-4442-bb7a-4982a99f9b1e">
+        <Shortcut Id="DesktopShortcut" Name="Solumanir Sheet Designer Studio" Description="Launch Solumanir Sheet Designer Studio" Icon="MyIcon" Target="[INSTALLFOLDER]SolumanirSheetDesignerStudio.exe" WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKCU" Key="Software\Kronweber\SolumanirSheetDesignerStudio" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+
+    <StandardDirectory Id="StartMenuFolder">
+      <Component Id="StartMenuShortcutExe" Guid="ce48592e-937b-4013-ac75-47e6126b11b2">
+        <Shortcut Id="StartMenuShortcut" Name="Solumanir Sheet Designer Studio" Description="Launch Solumanir Sheet Designer Studio" Icon="MyIcon" Target="[INSTALLFOLDER]SolumanirSheetDesignerStudio.exe" WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKCU" Key="Software\Kronweber\SolumanirSheetDesignerStudio" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="SolumanirSheetDesignerStudio" />
+    </StandardDirectory>
+  </Package>
+</Wix>
