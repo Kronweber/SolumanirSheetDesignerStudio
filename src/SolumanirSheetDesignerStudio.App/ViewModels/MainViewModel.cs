@@ -155,7 +155,7 @@ public sealed partial class MainViewModel : ObservableObject
         DocumentSession session;
         try
         {
-            session = DocumentSession.CreateNew(Factory.NewProject(Settings.NewProjectStyle, Settings.DefaultRowHeight, first), Settings.EffectiveRecoveryFolder);
+            session = await Task.Run(() => DocumentSession.CreateNew(Factory.NewProject(Settings.NewProjectStyle, Settings.DefaultRowHeight, first), GetRecoveryFolder()));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -181,10 +181,10 @@ public sealed partial class MainViewModel : ObservableObject
         path = FullPathOrSame(path);
         if (!File.Exists(path))
         {
-            bool known = Recents.Items.Any(i => PathUtil.Same(i.Path, path));
+            bool known = await Task.Run(() => Recents.Contains(path));
             if (known && await Dialogs.ConfirmAsync(Loc.T("File not found"), Loc.T("\"{0}\" no longer exists. Remove it from the recent projects?", path), Loc.T("Remove")))
             {
-                Recents.Remove(path);
+                await Task.Run(() => Recents.Remove(path));
                 Start.Refresh();
             }
             else if (!known)
@@ -212,9 +212,8 @@ public sealed partial class MainViewModel : ObservableObject
             var clock = System.Diagnostics.Stopwatch.StartNew();
             try
             {
-                string recoveryRoot = Settings.EffectiveRecoveryFolder;
                 var probe = Render.Probe;
-                session = await Task.Run(() => DocumentSession.Open(path, recoveryRoot, probe));
+                session = await Task.Run(() => DocumentSession.Open(path, GetRecoveryFolder(), probe));
             }
             catch (Exception ex) when (IsLoadFailure(ex))
             {
@@ -301,8 +300,25 @@ public sealed partial class MainViewModel : ObservableObject
 
     private void RememberProject(string path, string title)
     {
-        Recents.Touch(path, title);
+        _ = Task.Run(() => Recents.Touch(path, title));
         Settings.LastProjectPath = path;
+    }
+
+    /// <summary>Where session folders go. A folder picked in the settings that cannot be used gives way to the default one.</summary>
+    private string GetRecoveryFolder()
+    {
+        string folder = Settings.EffectiveRecoveryFolder;
+        if (string.IsNullOrWhiteSpace(Settings.RecoveryFolder)) return folder;
+        try
+        {
+            Directory.CreateDirectory(folder);
+            return folder;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Toasts.Error(Loc.T("The recovery folder \"{0}\" cannot be used. The default one is used instead.", Settings.RecoveryFolder));
+            return AppPaths.DefaultRecoveryDir;
+        }
     }
 
     // ---------- save ----------
@@ -412,9 +428,8 @@ public sealed partial class MainViewModel : ObservableObject
         DocumentSession session;
         try
         {
-            string recoveryRoot = Settings.EffectiveRecoveryFolder;
             var probe = Render.Probe;
-            session = await Task.Run(() => DocumentSession.Open(path, recoveryRoot, probe));
+            session = await Task.Run(() => DocumentSession.Open(path, GetRecoveryFolder(), probe));
         }
         catch (Exception ex) when (IsLoadFailure(ex))
         {

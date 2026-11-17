@@ -44,7 +44,7 @@ public sealed class PreviewImageCache : IDisposable
     }
 
     public long BudgetBytes { get; set; }
-    public SKFilterQuality Quality { get; set; } = SKFilterQuality.Medium;
+    public SKSamplingOptions Quality { get; set; } = new(SKFilterMode.Linear, SKMipmapMode.Linear);
 
     /// <summary>Raised on a worker thread when a better image became available; the view should repaint.</summary>
     public event Action? Updated;

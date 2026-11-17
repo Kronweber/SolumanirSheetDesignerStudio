@@ -16,14 +16,16 @@ public sealed record ExportProgress(int PageIndex, int PageCount, string PageNam
 
 public sealed record ExportPageResult(string Path, int Width, int Height, bool Capped, string Renderer, long FileBytes, TimeSpan Elapsed);
 
+public sealed record ExportPageFailure(string PageName, Exception Error);
+
 public sealed class ExportResult
 {
     public List<ExportPageResult> Pages { get; } = new();
+    /// <summary>Pages that could not be written. The others are exported all the same.</summary>
+    public List<ExportPageFailure> Failures { get; } = new();
     public List<string> Warnings { get; } = new();
     public bool Cancelled { get; set; }
-    public Exception? Error { get; set; }
-    public string? FailedPage { get; set; }
-    public bool Succeeded => !Cancelled && Error == null;
+    public bool Succeeded => !Cancelled && Failures.Count == 0;
 }
 
 /// <summary>
@@ -82,9 +84,7 @@ public sealed class SheetExporter
                 }
                 catch (Exception ex)
                 {
-                    result.Error = ex;
-                    result.FailedPage = page.Name;
-                    break;
+                    result.Failures.Add(new ExportPageFailure(page.Name, ex));
                 }
             }
             return result;
@@ -318,13 +318,13 @@ public sealed class SheetExporter
         public void Draw(SKCanvas canvas, ImagePlacement placement, SKRect local, SKRectI device)
         {
             if (!_bands.TryGetValue(placement, out var b)) return;
-            using var paint = new SKPaint { FilterQuality = b.Exact ? SKFilterQuality.None : SKFilterQuality.High, IsAntialias = false };
+            using var paint = new SKPaint { IsAntialias = false };
             canvas.Save();
             canvas.ResetMatrix();
             if (b.Exact)
             {
                 // 1:1 — whole pixels, no arithmetic.
-                canvas.DrawImage(b.Image, b.Device.Left, b.Device.Top + b.RowOffset - _stripY, paint);
+                canvas.DrawImage(b.Image, b.Device.Left, b.Device.Top + b.RowOffset - _stripY, SKSamplingOptions.Default, paint);
             }
             else
             {
@@ -333,7 +333,9 @@ public sealed class SheetExporter
                 // image was cut into bands, so strips join without seams.
                 canvas.Translate(b.Device.Left, b.Device.Top - _stripY);
                 canvas.Scale(b.Device.Width / (float)b.Image.Width, b.Device.Height / (float)b.SourceHeight);
-                canvas.DrawImage(b.Image, 0, b.RowOffset, paint);
+                // Bicubic when the image grows, bilinear when it shrinks (the decoder leaves less than 2x to do).
+                bool isEnlarged = b.Device.Width >= b.Image.Width && b.Device.Height >= b.SourceHeight;
+                canvas.DrawImage(b.Image, 0, b.RowOffset, isEnlarged ? new SKSamplingOptions(SKCubicResampler.Mitchell) : new SKSamplingOptions(SKFilterMode.Linear), paint);
             }
             canvas.Restore();
         }

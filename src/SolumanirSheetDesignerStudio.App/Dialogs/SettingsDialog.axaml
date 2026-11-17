@@ -62,7 +62,7 @@
             <TextBlock Classes="field" Text="{l:T 'Recovery folder'}" />
             <DockPanel>
               <Button DockPanel.Dock="Right" Content="{l:T 'Browse…'}" Command="{Binding BrowseRecoveryFolderCommand}" Margin="6,0,0,0" />
-              <TextBox Text="{Binding RecoveryFolder}" Watermark="{Binding RecoveryFolderHint}" />
+              <TextBox Text="{Binding RecoveryFolder}" PlaceholderText="{Binding RecoveryFolderHint}" />
             </DockPanel>
             <TextBlock Classes="hint" Text="{l:T 'Newly added images are kept here until the project is saved.'}" />
 
@@ -102,7 +102,7 @@
             <TextBlock Classes="field" Text="{l:T 'Default export folder'}" />
             <DockPanel>
               <Button DockPanel.Dock="Right" Content="{l:T 'Browse…'}" Command="{Binding BrowseExportFolderCommand}" Margin="6,0,0,0" />
-              <TextBox Text="{Binding ExportFolder}" Watermark="{l:T 'Next to the project file'}" />
+              <TextBox Text="{Binding ExportFolder}" PlaceholderText="{l:T 'Next to the project file'}" />
             </DockPanel>
             <TextBlock Classes="field" Text="{l:T 'File name pattern'}" />
             <TextBox Text="{Binding ExportPattern}" />

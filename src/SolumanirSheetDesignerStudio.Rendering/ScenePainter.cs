@@ -364,7 +364,7 @@ public sealed class ScenePainter
         for (int i = 0; i < points.Length; i++) points[i] = new SKPoint(g.Positions[i * 2], g.Positions[i * 2 + 1]);
         using var builder = new SKTextBlobBuilder();
         builder.AddPositionedRun(g.Glyphs, font, points);
-        return builder.Build();
+        return builder.Build()!;
     }
 
     // ---------- images ----------

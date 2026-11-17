@@ -159,9 +159,9 @@ public static class ProjectFile
     {
         Span<byte> lenBytes = stackalloc byte[4];
         fs.Position = 8;
-        fs.ReadExactly(lenBytes);
+        bool hasLength = fs.ReadAtLeast(lenBytes, 4, throwOnEndOfStream: false) == 4;
         uint jsonLen = BinaryPrimitives.ReadUInt32BigEndian(lenBytes);
-        if (12 + (long)jsonLen > fs.Length || jsonLen > MaxJsonBytes) throw new InvalidProjectException("The legacy project file is truncated or damaged.");
+        if (!hasLength || 12 + (long)jsonLen > fs.Length || jsonLen > MaxJsonBytes) throw new InvalidProjectException("The legacy project file is truncated or damaged.");
         var json = new byte[jsonLen];
         fs.ReadExactly(json);
 

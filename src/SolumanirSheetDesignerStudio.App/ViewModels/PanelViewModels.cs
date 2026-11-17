@@ -268,32 +268,43 @@ public sealed partial class RecentItemViewModel : ObservableObject
         Path = model.Path;
         Title = string.IsNullOrWhiteSpace(model.Title) ? System.IO.Path.GetFileNameWithoutExtension(model.Path) : model.Title;
         _pinned = model.Pinned;
-        try
-        {
-            var info = new FileInfo(model.Path);
-            Missing = !info.Exists;
-            Modified = info.Exists ? info.LastWriteTime.ToString("g") + " · " + Format.Bytes(info.Length) : Loc.T("File not found");
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
-        {
-            Missing = true;
-            Modified = Loc.T("File not found");
-        }
-        string thumb = RecentProjects.ThumbPath(model.Path);
-        if (File.Exists(thumb))
-        {
-            try { Thumbnail = new Bitmap(thumb); }
-            catch (Exception) { /* a damaged thumbnail is just not shown */ }
-        }
     }
 
     public string Path { get; }
     public string Title { get; }
-    public string Modified { get; }
-    public bool Missing { get; }
-    public Bitmap? Thumbnail { get; }
 
+    [ObservableProperty] private string _modified = "";
+    [ObservableProperty] private bool _missing;
+    [ObservableProperty] private Bitmap? _thumbnail;
     [ObservableProperty] private bool _pinned;
+
+    /// <summary>Looks at the file. A drive that does not answer takes minutes, so this runs off the UI thread.</summary>
+    public (bool Missing, string Modified, Bitmap? Thumbnail) ReadDetails()
+    {
+        bool missing = true;
+        string modified = Loc.T("File not found");
+        Bitmap? thumbnail = null;
+        try
+        {
+            var info = new FileInfo(Path);
+            if (info.Exists)
+            {
+                missing = false;
+                modified = info.LastWriteTime.ToString("g") + " · " + Format.Bytes(info.Length);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            // shown as not found
+        }
+        try
+        {
+            string thumb = RecentProjects.ThumbPath(Path);
+            if (File.Exists(thumb)) thumbnail = new Bitmap(thumb);
+        }
+        catch (Exception) { /* a damaged thumbnail is just not shown */ }
+        return (missing, modified, thumbnail);
+    }
 
     public string PinLabel => Pinned ? Loc.T("Unpin") : Loc.T("Pin");
 
@@ -333,15 +344,31 @@ public sealed partial class StartViewModel : ObservableObject
         Recents.Clear();
         foreach (var r in _main.Recents.Ordered) Recents.Add(new RecentItemViewModel(r));
         HasRecents = Recents.Count > 0;
-
-        Recoveries.Clear();
-        try
+        foreach (var item in Recents)
         {
-            foreach (var c in RecoveryStore.FindOrphans(_main.Settings.EffectiveRecoveryFolder)) Recoveries.Add(new RecoveryItemViewModel(c));
+            _ = Task.Run(() =>
+            {
+                var details = item.ReadDetails();
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (Recents.Contains(item)) (item.Missing, item.Modified, item.Thumbnail) = details;
+                    else details.Thumbnail?.Dispose();
+                });
+            });
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+
+        // Sessions also land in the default folder when the one picked in the settings cannot be used.
+        Recoveries.Clear();
+        foreach (string folder in new[] { _main.Settings.EffectiveRecoveryFolder, AppPaths.DefaultRecoveryDir }.Distinct())
         {
-            // recovery folder unavailable: nothing to offer
+            try
+            {
+                foreach (var c in RecoveryStore.FindOrphans(folder)) Recoveries.Add(new RecoveryItemViewModel(c));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // recovery folder unavailable: nothing to offer
+            }
         }
         HasRecoveries = Recoveries.Count > 0;
     }
@@ -350,18 +377,18 @@ public sealed partial class StartViewModel : ObservableObject
     private Task OpenRecentAsync(RecentItemViewModel? item) => item == null ? Task.CompletedTask : _main.OpenPathAsync(item.Path);
 
     [RelayCommand]
-    private void TogglePin(RecentItemViewModel? item)
+    private async Task TogglePinAsync(RecentItemViewModel? item)
     {
         if (item == null) return;
-        _main.Recents.SetPinned(item.Path, !item.Pinned);
+        await Task.Run(() => _main.Recents.SetPinned(item.Path, !item.Pinned));
         Refresh();
     }
 
     [RelayCommand]
-    private void RemoveRecent(RecentItemViewModel? item)
+    private async Task RemoveRecentAsync(RecentItemViewModel? item)
     {
         if (item == null) return;
-        _main.Recents.Remove(item.Path);
+        await Task.Run(() => _main.Recents.Remove(item.Path));
         Refresh();
     }
 

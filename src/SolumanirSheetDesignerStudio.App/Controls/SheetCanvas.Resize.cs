@@ -10,7 +10,7 @@ namespace SolumanirSheetDesignerStudio.App.Controls;
 /// <summary>
 /// Sizes changed on the sheet itself: drag the bottom edge of a row (height), the gap before the lore column
 /// (its width), the line between the parts of a split slot (their shares) or the corner of the selected image
-/// (its scale); Alt+wheel does the same in steps. Every drag is one undo step.
+/// (its scale); Ctrl+Shift+wheel does the same in steps. Every drag is one undo step.
 /// </summary>
 public sealed partial class SheetCanvas
 {
@@ -203,15 +203,16 @@ public sealed partial class SheetCanvas
         }
     }
 
-    /// <summary>Alt+wheel over an image changes its scale (or share), elsewhere in a row the row's height. Alt+Shift: fine steps.</summary>
+    /// <summary>Ctrl+Shift+wheel over an image changes its scale (or share), elsewhere in a row the row's height. Alt as well gives fine steps.</summary>
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
-        if (_editor is not { IsPreview: false } editor || !e.KeyModifiers.HasFlag(KeyModifiers.Alt) || e.KeyModifiers.HasFlag(KeyModifiers.Control)) return;
-        double turn = e.Delta.Y != 0 ? e.Delta.Y : e.Delta.X; // some platforms report Alt+wheel as horizontal
+        bool command = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta);
+        if (_editor is not { IsPreview: false } editor || !command || !e.KeyModifiers.HasFlag(KeyModifiers.Shift)) return;
+        double turn = e.Delta.Y != 0 ? e.Delta.Y : e.Delta.X; // some platforms report the wheel as horizontal while a modifier is held
         if (turn == 0) return;
         int direction = Math.Sign(turn);
-        bool fine = e.KeyModifiers.HasFlag(KeyModifiers.Shift);
+        bool fine = e.KeyModifiers.HasFlag(KeyModifiers.Alt);
         var pos = ToSheet(e.GetPosition(this));
         var hit = editor.Layout.HitTest(pos.X, pos.Y);
         if (hit.Kind == HitKind.Part && hit.PartId != null) editor.NudgePartScale(hit.PartId, direction * (fine ? 1 : EditorViewModel.ScaleStep));

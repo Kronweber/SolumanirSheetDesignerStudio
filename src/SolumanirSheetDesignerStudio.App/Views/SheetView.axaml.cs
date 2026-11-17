@@ -27,6 +27,7 @@ public partial class SheetView : UserControl
             if (e.Property == BoundsProperty) ApplyFit();
         };
         // Ctrl+wheel zooms around the pointer; tunnel so the ScrollViewer does not scroll first.
+        // Ctrl+Shift+wheel is left to the sheet, which resizes what is under the pointer.
         Scroller.AddHandler(PointerWheelChangedEvent, OnWheel, RoutingStrategies.Tunnel);
 
         foreach (var box in new[] { LineEditor, BodyEditor })
@@ -112,7 +113,7 @@ public partial class SheetView : UserControl
     {
         if (_editor is not { } editor) return;
         bool command = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta);
-        if (!command || e.Delta.Y == 0) return;
+        if (!command || e.KeyModifiers.HasFlag(KeyModifiers.Shift) || e.Delta.Y == 0) return;
         e.Handled = true;
 
         double oldZoom = editor.Zoom;
@@ -183,7 +184,7 @@ public partial class SheetView : UserControl
             box.LetterSpacing = body ? 0 : info.Font.LetterSpacing;
             box.TextAlignment = info.Align switch { TextAlign.Center => TextAlignment.Center, TextAlign.Right => TextAlignment.Right, _ => TextAlignment.Left };
             box.Foreground = new SolidColorBrush(Color.FromArgb(info.Color.A, info.Color.R, info.Color.G, info.Color.B));
-            box.Watermark = info.Uppercase ? TextCase.Upper(info.Placeholder) : info.Placeholder;
+            box.PlaceholderText = info.Uppercase ? TextCase.Upper(info.Placeholder) : info.Placeholder;
             if (body) box.LineHeight = info.Font.Size * 1.5;
         }
 

@@ -363,7 +363,7 @@ internal sealed class BandDecoder : IDisposable
     }
 
     /// <summary>Decodes a whole image so that its larger side is about <paramref name="maxDim"/> pixels (never upscaled).</summary>
-    public static SKImage DecodePreview(Func<Stream> open, int fileWidth, int fileHeight, int maxDim, SKFilterQuality quality)
+    public static SKImage DecodePreview(Func<Stream> open, int fileWidth, int fileHeight, int maxDim, SKSamplingOptions sampling)
     {
         int longest = Math.Max(1, Math.Max(fileWidth, fileHeight));
         double scale = Math.Min(1.0, maxDim / (double)longest);
@@ -377,9 +377,9 @@ internal sealed class BandDecoder : IDisposable
         {
             var target = new SKBitmap(ImageOps.Info(tw, th));
             using (var canvas = new SKCanvas(target))
-            using (var paint = new SKPaint { BlendMode = SKBlendMode.Src, FilterQuality = quality == SKFilterQuality.None ? SKFilterQuality.Low : quality })
+            using (var paint = new SKPaint { BlendMode = SKBlendMode.Src })
             {
-                canvas.DrawImage(band, SKRect.Create(band.Width, band.Height), SKRect.Create(tw, th), paint);
+                canvas.DrawImage(band, SKRect.Create(band.Width, band.Height), SKRect.Create(tw, th), sampling, paint);
             }
             target.SetImmutable();
             var image = SKImage.FromBitmap(target);

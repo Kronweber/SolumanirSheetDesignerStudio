@@ -473,11 +473,11 @@ public sealed partial class EditorViewModel : ObservableObject, IDisposable
         if (_exportDone is { } export) await export.Task;
     }
 
-    private static SKFilterQuality ToQuality(PreviewQuality q) => q switch
+    private static SKSamplingOptions ToQuality(PreviewQuality q) => q switch
     {
-        PreviewQuality.Fast => SKFilterQuality.Low,
-        PreviewQuality.High => SKFilterQuality.High,
-        _ => SKFilterQuality.Medium,
+        PreviewQuality.Fast => new SKSamplingOptions(SKFilterMode.Linear),
+        PreviewQuality.High => new SKSamplingOptions(SKCubicResampler.Mitchell),
+        _ => new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear),
     };
 
     /// <summary>Applies changed app settings to the live editor.</summary>

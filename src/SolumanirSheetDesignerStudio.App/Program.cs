@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+using System.Text;
 using Avalonia;
 using Avalonia.Media;
 using SolumanirSheetDesignerStudio.Core.Export;
@@ -10,9 +12,42 @@ namespace SolumanirSheetDesignerStudio.App;
 
 internal static class Program
 {
+    private const int ATTACH_PARENT_PROCESS = -1, STD_OUTPUT_HANDLE = -11, STD_ERROR_HANDLE = -12;
+    private const uint FILE_TYPE_UNKNOWN = 0;
+
+    [DllImport("kernel32.dll")]
+    private static extern bool AttachConsole(int dwProcessId);
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetStdHandle(int nStdHandle);
+
+    [DllImport("kernel32.dll")]
+    private static extern bool SetStdHandle(int nStdHandle, IntPtr hHandle);
+
+    [DllImport("kernel32.dll")]
+    private static extern uint GetFileType(IntPtr hFile);
+
+    /// <summary>A windowed program starts without a console on Windows. This borrows the caller's and keeps redirected streams as they are.</summary>
+    private static void AttachParentConsole()
+    {
+        IntPtr handleOutput = GetStdHandle(STD_OUTPUT_HANDLE), handleError = GetStdHandle(STD_ERROR_HANDLE);
+        if (!AttachConsole(ATTACH_PARENT_PROCESS)) return;
+        if (GetFileType(handleOutput) != FILE_TYPE_UNKNOWN) SetStdHandle(STD_OUTPUT_HANDLE, handleOutput);
+        if (GetFileType(handleError) != FILE_TYPE_UNKNOWN) SetStdHandle(STD_ERROR_HANDLE, handleError);
+    }
+
     [STAThread]
     public static int Main(string[] args)
     {
+        bool opensWindow = args.Length == 0 || (args.Length == 1 && !args[0].StartsWith('-'));
+        if (!opensWindow)
+        {
+            if (OperatingSystem.IsWindows()) AttachParentConsole();
+            // Redirected output is UTF-8 everywhere, so file names survive any code page.
+            if (Console.IsOutputRedirected) Console.SetOut(new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true });
+            if (Console.IsErrorRedirected) Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
+        }
+
         if (args.Contains("--help") || args.Contains("-h")) return Help();
         if (args.Contains("--version"))
         {
@@ -104,7 +139,17 @@ internal static class Program
         }
         for (int i = 0; i < args.Length; i++)
         {
-            if (ExportValueOptions.Contains(args[i])) { i++; continue; } // skips the option's value
+            if (ExportValueOptions.Contains(args[i]))
+            {
+                // An argument that cannot be used ends the run. It is never replaced by a default.
+                if (i + 1 >= args.Length || !IsArgumentValid(args[i], args[i + 1]))
+                {
+                    Console.Error.WriteLine($"{args[i]} needs a valid value. See --help.");
+                    return 2;
+                }
+                i++; // skips the option's value
+                continue;
+            }
             if (args[i] == "--transparent") continue;
             Console.Error.WriteLine($"Unknown export option \"{args[i]}\". See --help.");
             return 2;
@@ -125,10 +170,9 @@ internal static class Program
             options = options with { ScaleMode = ExportScaleMode.CustomScale, CustomScale = factor };
         int threads = int.TryParse(Value("--threads"), out int t) && t > 0 ? t : Math.Clamp(Environment.ProcessorCount, 1, 16);
 
-        string work = Path.Combine(Path.GetTempPath(), "ssds-export-" + Guid.NewGuid().ToString("N")[..8]);
         try
         {
-            using var session = DocumentSession.Open(projectPath, work);
+            using var session = DocumentSession.Open(projectPath, GetWorkFolder());
             foreach (string warning in session.LoadWarnings) Console.Error.WriteLine("warning: " + warning);
             using var render = new RenderServices();
             foreach (string missing in render.Fonts.MissingFonts) Console.Error.WriteLine($"warning: bundled font \"{missing}\" is missing; using a system font");
@@ -162,21 +206,38 @@ internal static class Program
             Console.Error.WriteLine();
             foreach (string warning in result.Warnings) Console.Error.WriteLine("warning: " + warning);
             foreach (var page in result.Pages)
-                Console.WriteLine($"{page.Path}\t{page.Width}x{page.Height}\t{page.FileBytes} bytes\t{page.Elapsed.TotalSeconds:F1}s\t{page.Renderer}{(page.Capped ? "\tcapped" : "")}");
+                Console.WriteLine(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"{page.Path}\t{page.Width}x{page.Height}\t{page.FileBytes} bytes\t{page.Elapsed.TotalSeconds:F1}s\t{page.Renderer}{(page.Capped ? "\tcapped" : "")}"));
             if (result.Cancelled) { Console.Error.WriteLine("Cancelled."); return 130; }
-            if (result.Error != null) { Console.Error.WriteLine($"Export of \"{result.FailedPage}\" failed: {result.Error.Message}"); return 1; }
-            return 0;
+            foreach (var failure in result.Failures) Console.Error.WriteLine($"Export of \"{failure.PageName}\" failed: {failure.Error.Message}");
+            return result.Failures.Count > 0 ? 1 : 0;
         }
         catch (Exception ex) when (ex is IOException or InvalidProjectException or UnauthorizedAccessException)
         {
             Console.Error.WriteLine("Error: " + ex.Message);
             return 1;
         }
-        finally
-        {
-            try { if (Directory.Exists(work)) Directory.Delete(work, true); } catch (Exception) { /* temp folder */ }
-        }
     }
+
+    /// <summary>Temp folder the headless commands work in. What a killed run left there is cleared on the way.</summary>
+    private static string GetWorkFolder()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "ssds-headless");
+        try { RecoveryStore.FindOrphans(folder); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* only housekeeping */ }
+        return folder;
+    }
+
+    /// <summary>True when an export option accepts <paramref name="argument"/>. Paths are checked when they are used.</summary>
+    private static bool IsArgumentValid(string option, string argument) => option switch
+    {
+        "--scale" => string.Equals(argument, "auto", StringComparison.OrdinalIgnoreCase) ||
+                     (double.TryParse(argument, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double factor) && double.IsFinite(factor) && factor > 0),
+        "--width" or "--page" or "--threads" => int.TryParse(argument, out int number) && number > 0,
+        "--max-edge" => int.TryParse(argument, out int edge) && edge >= 0,
+        "--compression" => argument.ToLowerInvariant() is "fast" or "balanced" or "small",
+        _ => true,
+    };
 
     /// <summary>Opens a project (v1 or v2) and writes it as a v2 file; prints how long loading and saving took.</summary>
     private static int ConvertHeadless(string[] args, int at)
@@ -192,9 +253,9 @@ internal static class Program
             Console.Error.WriteLine("The output must be a different file.");
             return 2;
         }
-        string work = Path.Combine(Path.GetTempPath(), "ssds-convert-" + Guid.NewGuid().ToString("N")[..8]);
         try
         {
+            string work = GetWorkFolder();
             var clock = System.Diagnostics.Stopwatch.StartNew();
             using var session = DocumentSession.Open(input, work);
             double loadSeconds = clock.Elapsed.TotalSeconds;
@@ -204,17 +265,14 @@ internal static class Program
             var request = session.CreateSaveRequest(output, relocate: false, session.LoadedThumbs);
             var result = ProjectFile.Save(request);
             foreach (string warning in result.Warnings) Console.Error.WriteLine("warning: " + warning);
-            Console.WriteLine($"{output}\t{session.Project.Pages.Count} pages\t{result.ImageCount} images\t{result.FileBytes} bytes\tload {loadSeconds:F2}s\tsave {clock.Elapsed.TotalSeconds:F2}s");
+            Console.WriteLine(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                $"{output}\t{session.Project.Pages.Count} pages\t{result.ImageCount} images\t{result.FileBytes} bytes\tload {loadSeconds:F2}s\tsave {clock.Elapsed.TotalSeconds:F2}s"));
             return 0;
         }
         catch (Exception ex) when (ex is IOException or InvalidProjectException or UnauthorizedAccessException)
         {
             Console.Error.WriteLine("Error: " + ex.Message);
             return 1;
-        }
-        finally
-        {
-            try { if (Directory.Exists(work)) Directory.Delete(work, true); } catch (Exception) { /* temp folder */ }
         }
     }
 

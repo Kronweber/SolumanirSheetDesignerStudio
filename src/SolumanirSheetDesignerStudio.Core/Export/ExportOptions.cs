@@ -44,6 +44,9 @@ public static class FileNaming
 {
     private static readonly char[] Invalid = Path.GetInvalidFileNameChars().Concat("<>:\"/\\|?*").Distinct().ToArray();
 
+    /// <summary>Linux allows 255 bytes per file name. This leaves room for a counter, the extension and ".tmp".</summary>
+    private const int SizeNameMaxBytes = 220;
+
     public static string Sanitize(string? name, string fallback = "untitled")
     {
         if (string.IsNullOrWhiteSpace(name)) return fallback;
@@ -51,6 +54,7 @@ public static class FileNaming
         foreach (char c in name) sb.Append(Array.IndexOf(Invalid, c) >= 0 || char.IsControl(c) ? ' ' : c);
         string s = string.Join(' ', sb.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries)).Trim('.', ' ');
         if (s.Length > 120) s = s[..120].TrimEnd();
+        while (Encoding.UTF8.GetByteCount(s) > SizeNameMaxBytes) s = s[..^(char.IsLowSurrogate(s[^1]) ? 2 : 1)].TrimEnd();
         return s.Length == 0 ? fallback : s;
     }
 

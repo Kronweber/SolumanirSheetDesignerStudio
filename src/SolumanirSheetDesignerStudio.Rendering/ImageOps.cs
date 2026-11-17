@@ -30,7 +30,7 @@ internal static class ImageOps
         };
         var dst = new SKBitmap(Info(w, h));
         using (var canvas = new SKCanvas(dst))
-        using (var paint = new SKPaint { BlendMode = SKBlendMode.Src, FilterQuality = SKFilterQuality.None })
+        using (var paint = new SKPaint { BlendMode = SKBlendMode.Src })
         {
             canvas.SetMatrix(matrix);
             canvas.DrawBitmap(src, 0, 0, paint);

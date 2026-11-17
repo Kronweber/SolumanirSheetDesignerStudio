@@ -46,15 +46,22 @@
           Inputs="@(DistFile)" Outputs="$(DistZip)">
     <CallTarget Targets="WriteDistribution" />
   </Target>
-  <Target Name="DistributePublishedApp" AfterTargets="Publish" Condition="'$(Distribute)' == 'true'">
+  <!-- The file list is made in a target of its own. A target run by CallTarget does not see items created by its caller. -->
+  <Target Name="CollectPublishedApp" AfterTargets="Publish" Condition="'$(Distribute)' == 'true'">
     <ItemGroup>
       <DistFile Remove="@(DistFile)" />
       <DistFile Include="$(PublishDir)**/*" />
     </ItemGroup>
+  </Target>
+  <Target Name="DistributePublishedApp" AfterTargets="CollectPublishedApp" Condition="'$(Distribute)' == 'true'">
     <CallTarget Targets="WriteDistribution" />
   </Target>
   <Target Name="WriteDistribution">
-    <RemoveDir Directories="$(DistAppDir)" />
+    <!-- Old files go, folders stay. OneDrive marks folders read-only and those cannot be removed. -->
+    <ItemGroup>
+      <DistOld Include="$(DistAppDir)**/*" />
+    </ItemGroup>
+    <Delete Files="@(DistOld)" />
     <Copy SourceFiles="@(DistFile)" DestinationFiles="@(DistFile->'$(DistAppDir)%(RecursiveDir)%(Filename)%(Extension)')" />
     <MakeDir Directories="$(DistRoot)package" />
     <ZipDirectory SourceDirectory="$(DistAppDir)" DestinationFile="$(DistZip)" Overwrite="true" />

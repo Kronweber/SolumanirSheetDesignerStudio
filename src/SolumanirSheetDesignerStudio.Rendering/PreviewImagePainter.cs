@@ -28,7 +28,7 @@ public sealed class PreviewImagePainter : IImagePainter
             Incomplete = true;
             return;
         }
-        using var paint = new SKPaint { FilterQuality = _cache.Quality, IsAntialias = false };
-        canvas.DrawImage(image, SKRect.Create(image.Width, image.Height), local, paint);
+        using var paint = new SKPaint { IsAntialias = false };
+        canvas.DrawImage(image, SKRect.Create(image.Width, image.Height), local, _cache.Quality, paint);
     }
 }

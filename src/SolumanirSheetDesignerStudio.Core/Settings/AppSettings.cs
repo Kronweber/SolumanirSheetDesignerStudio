@@ -208,30 +208,54 @@ public sealed class RecentProjects
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
     }
 
-    [JsonIgnore] public IEnumerable<RecentProject> Ordered => Items.OrderByDescending(i => i.Pinned).ThenByDescending(i => i.LastOpenedUtc);
+    // Touch, Remove, SetPinned and Contains ask the file system about every entry, which can take minutes for a
+    // drive that does not answer. They are safe to call off the UI thread and ask outside the lock.
+    private readonly object _sync = new();
+
+    [JsonIgnore] public IEnumerable<RecentProject> Ordered
+    {
+        get { lock (_sync) return Items.OrderByDescending(i => i.Pinned).ThenByDescending(i => i.LastOpenedUtc).ToList(); }
+    }
 
     public void Touch(string path, string title)
     {
         path = System.IO.Path.GetFullPath(path);
-        var item = Find(path);
-        if (item == null) Items.Add(item = new RecentProject { Path = path });
-        item.Title = title;
-        item.LastOpenedUtc = DateTime.UtcNow;
-        foreach (var old in Items.Where(i => !i.Pinned).OrderByDescending(i => i.LastOpenedUtc).Skip(MaxUnpinned).ToList()) Items.Remove(old);
-        Save();
+        var item = Find(path).FirstOrDefault();
+        lock (_sync)
+        {
+            if (item == null) Items.Add(item = new RecentProject { Path = path });
+            item.Title = title;
+            item.LastOpenedUtc = DateTime.UtcNow;
+            foreach (var old in Items.Where(i => !i.Pinned).OrderByDescending(i => i.LastOpenedUtc).Skip(MaxUnpinned).ToList()) Items.Remove(old);
+            Save();
+        }
     }
 
     public void Remove(string path)
     {
-        if (Items.RemoveAll(i => PathUtil.Same(i.Path, path)) > 0) Save();
+        var found = Find(path);
+        lock (_sync)
+            if (Items.RemoveAll(found.Contains) > 0) Save();
     }
 
     public void SetPinned(string path, bool pinned)
     {
-        if (Find(path) is { } item) { item.Pinned = pinned; Save(); }
+        if (Find(path).FirstOrDefault() is not { } item) return;
+        lock (_sync)
+        {
+            item.Pinned = pinned;
+            Save();
+        }
     }
 
-    private RecentProject? Find(string path) => Items.FirstOrDefault(i => PathUtil.Same(i.Path, path));
+    public bool Contains(string path) => Find(path).Count > 0;
+
+    private List<RecentProject> Find(string path)
+    {
+        List<RecentProject> items;
+        lock (_sync) items = Items.ToList();
+        return items.Where(i => PathUtil.Same(i.Path, path)).ToList();
+    }
 
     /// <summary>Stable file name for a project's cached start-screen thumbnail.</summary>
     public static string ThumbPath(string projectPath) => System.IO.Path.Combine(AppPaths.RecentThumbsDir, PathUtil.Key(projectPath) + ".png");

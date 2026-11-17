@@ -31,11 +31,11 @@
       <StackPanel IsVisible="{Binding IsSheet}">
         <StackPanel Classes="group">
           <TextBlock Classes="field" Text="{l:T 'Project title'}" />
-          <TextBox Text="{Binding ProjectTitle}" Watermark="{l:T 'World name'}" />
+          <TextBox Text="{Binding ProjectTitle}" PlaceholderText="{l:T 'World name'}" />
           <TextBlock Classes="field" Text="{l:T 'Species name'}" />
-          <TextBox Text="{Binding PageName}" Watermark="{l:T 'Species name'}" />
+          <TextBox Text="{Binding PageName}" PlaceholderText="{l:T 'Species name'}" />
           <TextBlock Classes="field" Text="{l:T Subtitle}" />
-          <TextBox Text="{Binding Subtitle}" Watermark="{l:T 'Epithet or one-line description'}" />
+          <TextBox Text="{Binding Subtitle}" PlaceholderText="{l:T 'Epithet or one-line description'}" />
         </StackPanel>
 
         <TextBlock Classes="heading" Text="{l:T 'SHEET STYLE'}" Margin="0,0,0,6" />
@@ -109,7 +109,7 @@
       <StackPanel IsVisible="{Binding IsSection}">
         <StackPanel Classes="group">
           <TextBlock Classes="field" Text="{l:T Name}" />
-          <TextBox Text="{Binding SectionName}" Watermark="{l:T 'Row name'}" />
+          <TextBox Text="{Binding SectionName}" PlaceholderText="{l:T 'Row name'}" />
 
           <TextBlock Classes="field" Text="{l:T 'Height mode'}" />
           <ComboBox SelectedIndex="{Binding SizingModeIndex}">
@@ -123,11 +123,11 @@
           </StackPanel>
           <StackPanel Spacing="6" IsVisible="{Binding IsAutoSizing}">
             <TextBlock Classes="field" Text="{l:T 'Max image height (empty = no limit)'}" />
-            <NumericUpDown Value="{Binding SectionMaxHeight}" Minimum="0" Maximum="8000" Increment="10" FormatString="0" Watermark="{l:T none}" />
+            <NumericUpDown Value="{Binding SectionMaxHeight}" Minimum="0" Maximum="8000" Increment="10" FormatString="0" PlaceholderText="{l:T none}" />
           </StackPanel>
 
           <TextBlock Classes="field" Text="{l:T 'Export px (image height in the PNG)'}" />
-          <NumericUpDown Value="{Binding SectionExportPx}" Minimum="0" Maximum="100000" Increment="100" FormatString="0" Watermark="{l:T native}" />
+          <NumericUpDown Value="{Binding SectionExportPx}" Minimum="0" Maximum="100000" Increment="100" FormatString="0" PlaceholderText="{l:T native}" />
           <TextBlock Classes="hint" Text="{l:T 'Empty = each file keeps its native resolution.'}" />
         </StackPanel>
         <TextBlock Classes="info" Text="{Binding SectionReadout}" Margin="0,0,0,12" />
@@ -138,7 +138,7 @@
       <StackPanel IsVisible="{Binding IsSlot}">
         <StackPanel Classes="group">
           <TextBlock Classes="field" Text="{l:T Label}" />
-          <TextBox Text="{Binding SlotLabel}" Watermark="{l:T Label}" />
+          <TextBox Text="{Binding SlotLabel}" PlaceholderText="{l:T Label}" />
           <TextBlock Classes="hint" Text="{Binding PartPosition}" />
         </StackPanel>
 
@@ -176,7 +176,7 @@
       <StackPanel IsVisible="{Binding IsLore}">
         <StackPanel Classes="group">
           <TextBlock Classes="field" Text="{l:T Title}" />
-          <TextBox Text="{Binding LoreTitle}" Watermark="{l:T 'Section title'}" />
+          <TextBox Text="{Binding LoreTitle}" PlaceholderText="{l:T 'Section title'}" />
 
           <TextBlock Classes="field" Text="{l:T 'Text (Markdown)'}" />
           <WrapPanel>
@@ -194,7 +194,7 @@
           </WrapPanel>
           <TextBox Classes="mono" Text="{Binding LoreBody}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="220" MaxHeight="520"
                    SelectionStart="{Binding LoreSelectionStart, Mode=TwoWay}" SelectionEnd="{Binding LoreSelectionEnd, Mode=TwoWay}"
-                   Watermark="{l:T 'Markdown…'}" />
+                   PlaceholderText="{l:T 'Markdown…'}" />
           <Button Content="{l:T 'Edit on the sheet'}" Command="{Binding EditOnSheetCommand}" HorizontalAlignment="Left" />
         </StackPanel>
         <Expander Header="{l:T 'Markdown cheat-sheet'}" HorizontalAlignment="Stretch">

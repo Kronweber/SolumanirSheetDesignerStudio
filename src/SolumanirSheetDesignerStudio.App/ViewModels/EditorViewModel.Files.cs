@@ -141,7 +141,7 @@ public sealed partial class EditorViewModel
         }
         catch (Exception ex)
         {
-            result = new ExportResult { Error = ex };
+            result = new ExportResult { Failures = { new ExportPageFailure("", ex) } };
         }
         finally
         {
@@ -154,16 +154,16 @@ public sealed partial class EditorViewModel
         if (_disposed) return; // the project was closed while the export wound down
 
         foreach (string warning in result.Warnings) Main.Toasts.Error(warning);
+        if (result.Failures.Count > 0)
+        {
+            await Main.Dialogs.MessageAsync(Loc.T("Export failed"),
+                string.Join("\n\n", result.Failures.Select(f => Loc.T("\"{0}\" could not be exported:\n{1}", f.PageName, f.Error.Message))));
+        }
         if (result.Cancelled)
         {
             Main.Toasts.Show(result.Pages.Count > 0
                 ? Loc.T("Export cancelled. {0} page(s) were completed.", result.Pages.Count)
                 : Loc.T("Export cancelled."));
-        }
-        else if (result.Error != null)
-        {
-            await Main.Dialogs.MessageAsync(Loc.T("Export failed"),
-                Loc.T("\"{0}\" could not be exported:\n{1}", result.FailedPage ?? "", result.Error.Message));
         }
         else if (result.Pages.Count > 0)
         {

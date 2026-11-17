@@ -49,7 +49,7 @@ public sealed partial class SheetCanvas : Control, ICustomHitTest
         public string? TargetSectionId;
         public int InsertIndex = -1;
         public RectD? Indicator;
-        /// <summary>Image drags (Alt or Ctrl held): the part the image would go to, and whether it is copied there.</summary>
+        /// <summary>Image drags (Shift or Ctrl held): the part the image would go to, and whether it is copied there.</summary>
         public string? TargetPartId;
         public bool Copy;
         public RectD? Highlight;
@@ -302,14 +302,14 @@ public sealed partial class SheetCanvas : Control, ICustomHitTest
         if (!point.Properties.IsLeftButtonPressed) return;
         if (TryBeginResize(editor, pos, e)) return;
 
-        // Alt (or Ctrl, to copy) turns a drag of a placed image into "put this image there" instead of reordering slots.
-        bool alt = e.KeyModifiers.HasFlag(KeyModifiers.Alt), copy = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta);
-        bool imageDrag = (alt || copy) && hit.Kind == HitKind.Part && editor.Layout.FindPart(hit.PartId)?.Image != null;
+        // Shift (or Ctrl, to copy) turns a drag of a placed image into "put this image there" instead of reordering slots.
+        bool isSwap = e.KeyModifiers.HasFlag(KeyModifiers.Shift), copy = e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta);
+        bool imageDrag = (isSwap || copy) && hit.Kind == HitKind.Part && editor.Layout.FindPart(hit.PartId)?.Image != null;
         _press = new Press
         {
             Hit = hit, Start = point.Position, Clicks = e.ClickCount,
             Kind = imageDrag ? DragKind.Image : DragKindFor(editor, hit, pos),
-            Copy = imageDrag && copy && !alt,
+            Copy = imageDrag && copy && !isSwap,
         };
         e.Pointer.Capture(this);
         e.Handled = true;
@@ -368,10 +368,10 @@ public sealed partial class SheetCanvas : Control, ICustomHitTest
         editor.Hint = hit.Kind switch
         {
             HitKind.Part when editor.Layout.FindPart(hit.PartId)?.Image != null =>
-                Loc.T("Alt+wheel: size · Alt+drag: swap with another slot · Ctrl+drag: copy there · drag: reorder"),
+                Loc.T("Ctrl+Shift+wheel: size · Shift+drag: swap with another slot · Ctrl+drag: copy there · drag: reorder"),
             HitKind.Part => Loc.T("Click or drop an image here"),
             HitKind.Slot or HitKind.SlotLabel => Loc.T("Drag to reorder"),
-            HitKind.Section or HitKind.SectionName => Loc.T("Alt+wheel: row height · drop images to add slots"),
+            HitKind.Section or HitKind.SectionName => Loc.T("Ctrl+Shift+wheel: row height · drop images to add slots"),
             _ => "",
         };
         var layout = editor.Layout;

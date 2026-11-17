@@ -11,6 +11,7 @@ namespace SolumanirSheetDesignerStudio.App.Views;
 public partial class LibraryPanel : UserControl
 {
     private LibraryItemViewModel? _pressed;
+    private PointerPressedEventArgs? _press;
     private Point _pressPoint;
     private bool _dragging;
 
@@ -30,11 +31,12 @@ public partial class LibraryPanel : UserControl
             ? (e.Source as Visual)?.FindAncestorOfType<ListBoxItem>(includeSelf: true)?.DataContext as LibraryItemViewModel
             : null;
         _pressPoint = e.GetPosition(List);
+        _press = e;
     }
 
     private async void OnListPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (_pressed is not { } item || _dragging) return;
+        if (_pressed is not { } item || _press is not { } press || _dragging) return;
         var now = e.GetPosition(List);
         if (Math.Abs(now.X - _pressPoint.X) < 6 && Math.Abs(now.Y - _pressPoint.Y) < 6) return;
         _pressed = null;
@@ -43,7 +45,7 @@ public partial class LibraryPanel : UserControl
         {
             var data = new DataTransfer();
             data.Add(DataTransferItem.Create(AssetDrag.Format, item.Id));
-            await DragDrop.DoDragDropAsync(e, data, DragDropEffects.Copy);
+            await DragDrop.DoDragDropAsync(press, data, DragDropEffects.Copy);
         }
         finally
         {

@@ -224,7 +224,7 @@ public sealed class DialogService : IDialogService
                 using (bitmap)
                 using (var png = new MemoryStream())
                 {
-                    bitmap.Save(png);
+                    bitmap.Save(png, Avalonia.Media.Imaging.PngBitmapEncoderOptions.Default);
                     if (png.Length > 0) return new ClipboardImage(png.ToArray(), null, stamp + ".png");
                 }
             }

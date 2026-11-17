@@ -125,10 +125,18 @@ public sealed class MarkdigParser : IMarkdownParser
         return new MdTable(header, rows);
     }
 
-    private static List<MdInline> Inlines(ContainerInline? container)
+    /// <summary>Inlines nested deeper than this keep their text and lose their styling, which bounds the recursion here and in the layout.</summary>
+    private const int DepthNestingMax = 100;
+
+    private static List<MdInline> Inlines(ContainerInline? container, int depth = 0)
     {
         var result = new List<MdInline>();
         if (container == null) return result;
+        if (depth > DepthNestingMax)
+        {
+            AddText(result, PlainText(container));
+            return result;
+        }
         for (var inline = container.FirstChild; inline != null; inline = inline.NextSibling)
         {
             switch (inline)
@@ -138,7 +146,7 @@ public sealed class MarkdigParser : IMarkdownParser
                     break;
                 case EmphasisInline em:
                     var kind = em.DelimiterChar == '~' ? MdEmphasisKind.Strike : em.DelimiterCount >= 2 ? MdEmphasisKind.Bold : MdEmphasisKind.Italic;
-                    result.Add(new MdEmphasis(kind, Inlines(em)));
+                    result.Add(new MdEmphasis(kind, Inlines(em, depth + 1)));
                     break;
                 case CodeInline code:
                     result.Add(new MdCode(code.Content));
@@ -147,7 +155,7 @@ public sealed class MarkdigParser : IMarkdownParser
                     AddText(result, PlainText(image));
                     break;
                 case LinkInline link:
-                    result.Add(new MdLink(link.Url ?? "", Inlines(link)));
+                    result.Add(new MdLink(link.Url ?? "", Inlines(link, depth + 1)));
                     break;
                 case AutolinkInline auto:
                     result.Add(new MdLink(auto.Url, new MdInline[] { new MdText(auto.Url) }));
@@ -163,10 +171,10 @@ public sealed class MarkdigParser : IMarkdownParser
                     break;
                 case DelimiterInline delimiter:
                     AddText(result, delimiter.ToLiteral());
-                    result.AddRange(Inlines(delimiter));
+                    result.AddRange(Inlines(delimiter, depth + 1));
                     break;
                 case ContainerInline other:
-                    result.AddRange(Inlines(other));
+                    result.AddRange(Inlines(other, depth + 1));
                     break;
                 default:
                     AddText(result, inline.ToString() ?? "");

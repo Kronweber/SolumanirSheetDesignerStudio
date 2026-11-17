@@ -4,7 +4,7 @@ Desktop app for putting together species reference sheets (rows of model images,
 
 ## Building
 
-Needs the .NET 8 SDK.
+Needs the .NET 8 SDK, and fontconfig on Linux.
 
 ```sh
 dotnet build -c Release
@@ -18,8 +18,8 @@ Start `SolumanirSheetDesignerStudio`, optionally with a `.speciesproj` file to o
 
 - Drop images on a slot, or between slots to add new ones. Ctrl+V pastes one.
 - Click any text on the sheet to edit it.
-- Drag the bottom edge of a row, the corner of an image or the line in a split slot to resize them. Alt+wheel and `+` / `-` do the same in steps.
-- Alt+drag swaps two images, Ctrl+drag copies one.
+- Drag the bottom edge of a row, the corner of an image or the line in a split slot to resize them. Ctrl+Shift+wheel and `+` / `-` do the same in steps, finer with Alt.
+- Shift+drag swaps two images, Ctrl+drag copies one.
 - Ctrl+E exports, F5 previews.
 
 Pages can also be exported without opening the window:

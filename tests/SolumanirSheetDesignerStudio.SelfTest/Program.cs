@@ -340,6 +340,11 @@ internal static class Program
         var re = ProjectFile.Load(path);
         Check(!re.IsLegacy && re.Assets.Count == 2 && re.Project.Pages[0].Rows[1].Sizing.ExportPx == 2000, "upgraded file loads");
         Check(ReadAll(s.Assets, s.Assets.Get("i1")!).AsSpan().SequenceEqual(img1), "images survive the upgrade");
+
+        // A file that ends inside its header is a damaged project, not a stream error.
+        string cut = Path.Combine(_work, "cut.speciesproj");
+        File.WriteAllBytes(cut, Encoding.ASCII.GetBytes("SPSHEET1\0\0"));
+        Check(Throws<InvalidProjectException>(() => ProjectFile.Load(cut)), "a legacy file cut off inside its header raises InvalidProjectException");
     }
 
     private static void Recovery()
@@ -792,6 +797,13 @@ internal static class Program
         Check(names[0] == "Sky Elves.png" && names[1] == "Sky Elves (2).png" && names[2] == "untitled.png", "file naming: sanitised and unique: " + string.Join(" | ", names));
         Check(FileNaming.Expand("{index} - {project} - {name}", project, pg, 0) == "01 - My World - Sky Elves.png", "file naming tokens");
         Check(FileNaming.Expand("<Species name>.png", project, pg, 0) == "Sky Elves.png", "the handoff's default pattern spelling works");
+
+        // A name also has to fit a Linux file name (255 bytes) together with the suffixes added to it.
+        Check(FileNaming.Sanitize(new string('x', 200)).Length == 120, "a long plain name keeps the 120 character limit");
+        string wide = FileNaming.Sanitize(new string('日', 200));
+        Check(wide.Length == 73 && Encoding.UTF8.GetByteCount(wide) == 219, "a long name of three-byte characters is cut to 220 bytes: " + wide.Length);
+        string pairs = FileNaming.Sanitize(string.Concat(Enumerable.Repeat("\U0001F600", 100)));
+        Check(pairs.Length == 110 && char.IsLowSurrogate(pairs[^1]), "the cut never splits a surrogate pair: " + pairs.Length);
     }
 
     private static bool Throws<T>(Action action) where T : Exception
